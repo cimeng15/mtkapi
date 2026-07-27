@@ -185,11 +185,9 @@ class MemberController extends Controller
             // Import di-scope: siswa dipaksa type siswa; guru menerima guru & staff.
             $import = new MembersImport($scope['scope']);
 
-            // Salin file upload ke path sementara dengan ekstensi asli.
-            // Menghindari "Path cannot be empty" saat getRealPath() false di Windows.
             $upload = $request->file('file');
-            $tempPath = sys_get_temp_dir().'/import_'.uniqid().'.'.$upload->getClientOriginalExtension();
-            copy($upload->getPathname(), $tempPath);
+            $path = $upload->storeAs('temp', 'import_'.uniqid().'.'.$upload->getClientOriginalExtension());
+            $tempPath = storage_path('app/'.$path);
 
             try {
                 Excel::import($import, $tempPath);

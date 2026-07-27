@@ -27,12 +27,11 @@
 </div>
 
 <form method="POST" action="{{ route($scope['route'].'.batch') }}" id="batchForm">@csrf
-<input type="hidden" name="batch_action" id="batchAction">
 
 <div class="d-flex gap-2 align-items-center mb-2">
     <div><input type="checkbox" id="selectAll" onchange="document.querySelectorAll('.rowCheck').forEach(c=>c.checked=this.checked)"></div>
-    <button type="button" class="btn btn-sm btn-outline-danger" onclick="doBatch('delete')"><i class="bi bi-trash me-1"></i>Hapus</button>
-    <button type="button" class="btn btn-sm btn-outline-primary" onclick="doBatch('provision')"><i class="bi bi-wifi me-1"></i>Buat Akun Hotspot</button>
+    <button type="submit" name="batch_action" value="delete" class="btn btn-sm btn-outline-danger" onclick="return batchConfirm(this)"><i class="bi bi-trash me-1"></i>Hapus</button>
+    <button type="submit" name="batch_action" value="provision" class="btn btn-sm btn-outline-primary"><i class="bi bi-wifi me-1"></i>Buat Akun Hotspot</button>
 </div>
 
 <div class="card"><div class="table-responsive">
@@ -85,12 +84,11 @@
 <div class="mt-3">{{ $members->links() }}</div>
 
 <script>
-function doBatch(action){
+function batchConfirm(btn){
     var checked = document.querySelectorAll('.rowCheck:checked');
-    if(!checked.length) return alert('Pilih data terlebih dahulu.');
-    if(action==='delete' && !confirm('Hapus '+checked.length+' data?')) return;
-    document.getElementById('batchAction').value = action;
-    document.getElementById('batchForm').submit();
+    if(!checked.length){ alert('Pilih data terlebih dahulu.'); return false; }
+    if(btn.value==='delete') return confirm('Hapus '+checked.length+' data?');
+    return true;
 }
 </script>
 @endsection
