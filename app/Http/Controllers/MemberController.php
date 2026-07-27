@@ -187,7 +187,7 @@ class MemberController extends Controller
 
             $upload = $request->file('file');
             $path = $upload->storeAs('temp', 'import_'.uniqid().'.'.$upload->getClientOriginalExtension());
-            $tempPath = storage_path('app/'.$path);
+            $tempPath = \Illuminate\Support\Facades\Storage::path($path);
 
             try {
                 Excel::import($import, $tempPath);
