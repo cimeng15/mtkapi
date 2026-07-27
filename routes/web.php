@@ -29,7 +29,7 @@ Route::middleware('auth')->group(function () {
         ['uri' => 'siswa', 'name' => 'students'],
         ['uri' => 'guru',  'name' => 'teachers'],
     ] as $s) {
-        Route::post($s['uri'].'/batch', [MemberController::class, 'batch'])->name($s['name'].'.batch');
+        Route::match(['GET', 'POST'], $s['uri'].'/batch', [MemberController::class, 'batch'])->name($s['name'].'.batch');
         Route::get($s['uri'].'/import', [MemberController::class, 'importForm'])->name($s['name'].'.import.form');
         Route::post($s['uri'].'/import', [MemberController::class, 'import'])->name($s['name'].'.import');
         Route::get($s['uri'].'/template', [MemberController::class, 'template'])->name($s['name'].'.template');
@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function () {
     // ---- User Hotspot & Monitoring ----
     Route::get('hotspot/monitor', [HotspotUserController::class, 'monitor'])->name('hotspot.monitor');
     Route::post('hotspot/disconnect', [HotspotUserController::class, 'disconnect'])->name('hotspot.disconnect');
-    Route::post('hotspot/batch', [HotspotUserController::class, 'batch'])->name('hotspot.batch');
+    Route::match(['GET', 'POST'], 'hotspot/batch', [HotspotUserController::class, 'batch'])->name('hotspot.batch');
     Route::get('hotspot', [HotspotUserController::class, 'index'])->name('hotspot.index');
     Route::post('hotspot', [HotspotUserController::class, 'store'])->name('hotspot.store');
     Route::post('hotspot/{hotspotUser}/sync', [HotspotUserController::class, 'sync'])->name('hotspot.sync');

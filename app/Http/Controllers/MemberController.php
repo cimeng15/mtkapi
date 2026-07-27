@@ -130,6 +130,11 @@ class MemberController extends Controller
     public function batch(Request $request)
     {
         $scope = $this->scopeConfig($this->currentScope($request));
+
+        if ($request->isMethod('get')) {
+            return redirect()->route($scope['route'].'.index');
+        }
+
         $ids = $request->input('ids', []);
         $action = $request->input('batch_action');
 

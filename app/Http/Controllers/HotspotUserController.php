@@ -143,6 +143,10 @@ class HotspotUserController extends Controller
 
     public function batch(Request $request)
     {
+        if ($request->isMethod('get')) {
+            return redirect()->route('hotspot.index');
+        }
+
         $ids = $request->input('ids', []);
         $action = $request->input('batch_action');
         $users = HotspotUser::whereIn('id', $ids)->get();
