@@ -26,10 +26,20 @@
     </div>
 </div>
 
+<form method="POST" action="{{ route($scope['route'].'.batch') }}" id="batchForm">@csrf
+<input type="hidden" name="batch_action" id="batchAction">
+
+<div class="d-flex gap-2 align-items-center mb-2">
+    <div><input type="checkbox" id="selectAll" onchange="document.querySelectorAll('.rowCheck').forEach(c=>c.checked=this.checked)"></div>
+    <button type="button" class="btn btn-sm btn-outline-danger" onclick="doBatch('delete')"><i class="bi bi-trash me-1"></i>Hapus</button>
+    <button type="button" class="btn btn-sm btn-outline-primary" onclick="doBatch('provision')"><i class="bi bi-wifi me-1"></i>Buat Akun Hotspot</button>
+</div>
+
 <div class="card"><div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
             <tr>
+                <th style="width:32px"></th>
                 <th>ID Login</th><th>Nama</th>
                 @if($scope['scope'] === 'guru')<th>Tipe</th>@endif
                 <th>{{ $scope['detail'] }}</th><th>Paket</th><th>Akun Hotspot</th><th class="text-end">Aksi</th>
@@ -38,6 +48,7 @@
         <tbody>
             @forelse($members as $m)
                 <tr>
+                    <td><input type="checkbox" name="ids[]" value="{{ $m->id }}" class="rowCheck"></td>
                     <td><code>{{ $m->member_id }}</code></td>
                     <td>{{ $m->name }}</td>
                     @if($scope['scope'] === 'guru')
@@ -64,11 +75,22 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="{{ $scope['scope']==='guru' ? 7 : 6 }}" class="text-center text-muted py-4">Belum ada data. Silakan <a href="{{ route($scope['route'].'.import.form') }}">import</a> atau tambah manual.</td></tr>
+                <tr><td colspan="{{ $scope['scope']==='guru' ? 8 : 7 }}" class="text-center text-muted py-4">Belum ada data. Silakan <a href="{{ route($scope['route'].'.import.form') }}">import</a> atau tambah manual.</td></tr>
             @endforelse
         </tbody>
     </table>
 </div></div>
+</form>
 
 <div class="mt-3">{{ $members->links() }}</div>
+
+<script>
+function doBatch(action){
+    var checked = document.querySelectorAll('.rowCheck:checked');
+    if(!checked.length) return alert('Pilih data terlebih dahulu.');
+    if(action==='delete' && !confirm('Hapus '+checked.length+' data?')) return;
+    document.getElementById('batchAction').value = action;
+    document.getElementById('batchForm').submit();
+}
+</script>
 @endsection

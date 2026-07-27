@@ -127,6 +127,35 @@ class MemberController extends Controller
         return back()->with('success', 'Data '.$scope['singular'].' & akun hotspotnya dihapus.');
     }
 
+    public function batch(Request $request)
+    {
+        $scope = $this->scopeConfig($this->currentScope($request));
+        $ids = $request->input('ids', []);
+        $action = $request->input('batch_action');
+
+        $members = Member::whereIn('id', $ids)->whereIn('type', $scope['types'])->get();
+
+        if ($action === 'delete') {
+            foreach ($members as $m) {
+                if ($m->hotspotUser) {
+                    $this->removeHotspotEverywhere($m->hotspotUser);
+                }
+                $m->delete();
+            }
+            ActivityLog::record('member.batch_delete', 'Batch hapus '.count($members).' '.$scope['singular']);
+            return back()->with('success', count($members).' '.$scope['singular'].' dihapus (termasuk akun hotspot).');
+        }
+
+        if ($action === 'provision') {
+            $members->load(['package', 'hotspotUser']);
+            $prov = $this->autoProvision($members->whereNull('hotspotUser'));
+            ActivityLog::record('member.batch_provision', 'Batch provision '.$prov['created'].' akun hotspot');
+            return back()->with('success', $prov['message']);
+        }
+
+        return back()->with('error', 'Aksi tidak dikenal.');
+    }
+
     // ==================== IMPORT ====================
 
     public function importForm(Request $request)

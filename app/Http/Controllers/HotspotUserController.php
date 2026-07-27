@@ -141,6 +141,70 @@ class HotspotUserController extends Controller
         return back()->with('success', 'User hotspot '.$username.' dihapus.');
     }
 
+    public function batch(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        $action = $request->input('batch_action');
+        $users = HotspotUser::whereIn('id', $ids)->get();
+
+        if ($action === 'delete') {
+            foreach ($users as $h) {
+                try {
+                    $mt = new MikrotikService();
+                    if ($mt->hasSetting()) {
+                        $existing = $mt->findHotspotUser($h->username);
+                        if ($existing) $mt->removeHotspotUser($existing['.id']);
+                    }
+                } catch (Throwable $e) {}
+                $h->delete();
+            }
+            ActivityLog::record('hotspot.batch_delete', 'Batch hapus '.count($users).' user hotspot');
+            return back()->with('success', count($users).' user hotspot dihapus.');
+        }
+
+        if ($action === 'toggle') {
+            foreach ($users as $h) {
+                $new = $h->status === 'active' ? 'disabled' : 'active';
+                $h->update(['status' => $new]);
+                try {
+                    $mt = new MikrotikService();
+                    if ($mt->hasSetting()) {
+                        $existing = $mt->findHotspotUser($h->username);
+                        if ($existing) $mt->setHotspotUserDisabled($existing['.id'], $new === 'disabled');
+                    }
+                } catch (Throwable $e) {}
+            }
+            return back()->with('success', count($users).' user hotspot diubah statusnya.');
+        }
+
+        if ($action === 'sync') {
+            $ok = 0;
+            foreach ($users as $h) {
+                try {
+                    $mt = new MikrotikService();
+                    $existing = $mt->findHotspotUser($h->username);
+                    if ($existing) {
+                        $mt->updateHotspotUser($existing['.id'], [
+                            'password' => $h->password,
+                            'profile' => $h->package?->mikrotik_profile ?: 'default',
+                        ]);
+                        $id = $existing['.id'];
+                    } else {
+                        $id = $mt->addHotspotUser(
+                            $h->username, $h->password,
+                            $h->package?->mikrotik_profile, $h->comment
+                        );
+                    }
+                    $h->update(['synced' => true, 'synced_at' => now(), 'mikrotik_id' => $id]);
+                    $ok++;
+                } catch (Throwable $e) {}
+            }
+            return back()->with('success', $ok.' dari '.count($users).' user hotspot tersinkron.');
+        }
+
+        return back()->with('error', 'Aksi tidak dikenal.');
+    }
+
     /**
      * Putuskan sesi aktif (dari halaman monitoring).
      */

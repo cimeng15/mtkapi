@@ -10,14 +10,26 @@
     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addModal"><i class="bi bi-plus-lg me-1"></i>Tambah Manual</button>
 </div>
 
+<form method="POST" action="{{ route('hotspot.batch') }}" id="batchForm">@csrf
+<input type="hidden" name="batch_action" id="batchAction">
+
+<div class="d-flex gap-2 align-items-center mb-2">
+    <div><input type="checkbox" id="selectAll" onchange="document.querySelectorAll('.rowCheck').forEach(c=>c.checked=this.checked)"></div>
+    <button type="button" class="btn btn-sm btn-outline-danger" onclick="doBatch('delete')"><i class="bi bi-trash me-1"></i>Hapus</button>
+    <button type="button" class="btn btn-sm btn-outline-warning" onclick="doBatch('toggle')"><i class="bi bi-power me-1"></i>Toggle</button>
+    <button type="button" class="btn btn-sm btn-outline-success" onclick="doBatch('sync')"><i class="bi bi-arrow-repeat me-1"></i>Sinkron</button>
+</div>
+
 <div class="card"><div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light"><tr>
+            <th style="width:32px"></th>
             <th>Username</th><th>Password</th><th>Paket</th><th>Anggota</th><th>Status</th><th>Router</th><th class="text-end">Aksi</th>
         </tr></thead>
         <tbody>
             @forelse($users as $h)
                 <tr>
+                    <td><input type="checkbox" name="ids[]" value="{{ $h->id }}" class="rowCheck"></td>
                     <td class="fw-semibold">{{ $h->username }}</td>
                     <td><code>{{ $h->password }}</code></td>
                     <td>{{ $h->package?->name ?: '-' }}</td>
@@ -43,11 +55,13 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="text-center text-muted py-4">Belum ada user hotspot. Buat dari menu <a href="{{ route('students.index') }}">Data Siswa</a> / <a href="{{ route('teachers.index') }}">Data Guru</a>, atau tambah manual.</td></tr>
+                <tr><td colspan="8" class="text-center text-muted py-4">Belum ada user hotspot. Buat dari menu <a href="{{ route('students.index') }}">Data Siswa</a> / <a href="{{ route('teachers.index') }}">Data Guru</a>, atau tambah manual.</td></tr>
             @endforelse
         </tbody>
     </table>
 </div></div>
+</form>
+
 <div class="mt-3">{{ $users->links() }}</div>
 
 @push('modals')
@@ -69,4 +83,14 @@
     </form>
 </div></div>
 @endpush
+
+<script>
+function doBatch(action){
+    var checked = document.querySelectorAll('.rowCheck:checked');
+    if(!checked.length) return alert('Pilih data terlebih dahulu.');
+    if(action==='delete' && !confirm('Hapus '+checked.length+' data?')) return;
+    document.getElementById('batchAction').value = action;
+    document.getElementById('batchForm').submit();
+}
+</script>
 @endsection
