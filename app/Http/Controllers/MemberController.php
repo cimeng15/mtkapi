@@ -154,7 +154,7 @@ class MemberController extends Controller
             // Salin file upload ke path sementara dengan ekstensi asli.
             // Menghindari "Path cannot be empty" saat getRealPath() false di Windows.
             $upload = $request->file('file');
-            $tempPath = storage_path('framework/cache/laravel-excel/import_'.uniqid().'.'.$upload->getClientOriginalExtension());
+            $tempPath = sys_get_temp_dir().'/import_'.uniqid().'.'.$upload->getClientOriginalExtension();
             copy($upload->getPathname(), $tempPath);
 
             try {
