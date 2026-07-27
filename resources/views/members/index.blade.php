@@ -26,13 +26,16 @@
     </div>
 </div>
 
-<form method="POST" action="{{ route($scope['route'].'.batch') }}" id="batchForm">@csrf
-
 <div class="d-flex gap-2 align-items-center mb-2">
     <div><input type="checkbox" id="selectAll" onchange="document.querySelectorAll('.rowCheck').forEach(c=>c.checked=this.checked)"></div>
-    <button type="submit" name="batch_action" value="delete" class="btn btn-sm btn-outline-danger" onclick="return batchConfirm(this)"><i class="bi bi-trash me-1"></i>Hapus</button>
-    <button type="submit" name="batch_action" value="provision" class="btn btn-sm btn-outline-primary"><i class="bi bi-wifi me-1"></i>Buat Akun Hotspot</button>
+    <button type="button" class="btn btn-sm btn-outline-danger" onclick="doBatch('delete')"><i class="bi bi-trash me-1"></i>Hapus</button>
+    <button type="button" class="btn btn-sm btn-outline-primary" onclick="doBatch('provision')"><i class="bi bi-wifi me-1"></i>Buat Akun Hotspot</button>
 </div>
+
+<form id="batchForm" method="POST" action="{{ route($scope['route'].'.batch') }}" style="display:none">@csrf
+    <input type="hidden" name="batch_action" id="batchAction">
+    <div id="batchIds"></div>
+</form>
 
 <div class="card"><div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
@@ -47,7 +50,7 @@
         <tbody>
             @forelse($members as $m)
                 <tr>
-                    <td><input type="checkbox" name="ids[]" value="{{ $m->id }}" class="rowCheck"></td>
+                    <td><input type="checkbox" value="{{ $m->id }}" class="rowCheck"></td>
                     <td><code>{{ $m->member_id }}</code></td>
                     <td>{{ $m->name }}</td>
                     @if($scope['scope'] === 'guru')
@@ -79,16 +82,19 @@
         </tbody>
     </table>
 </div></div>
-</form>
 
 <div class="mt-3">{{ $members->links() }}</div>
 
 <script>
-function batchConfirm(btn){
+function doBatch(action){
     var checked = document.querySelectorAll('.rowCheck:checked');
-    if(!checked.length){ alert('Pilih data terlebih dahulu.'); return false; }
-    if(btn.value==='delete') return confirm('Hapus '+checked.length+' data?');
-    return true;
+    if(!checked.length) return alert('Pilih data terlebih dahulu.');
+    if(action==='delete' && !confirm('Hapus '+checked.length+' data?')) return;
+    document.getElementById('batchAction').value = action;
+    var c = document.getElementById('batchIds');
+    c.innerHTML = '';
+    checked.forEach(function(b){ c.insertAdjacentHTML('beforeend','<input type="hidden" name="ids[]" value="'+b.value+'">'); });
+    document.getElementById('batchForm').submit();
 }
 </script>
 @endsection
