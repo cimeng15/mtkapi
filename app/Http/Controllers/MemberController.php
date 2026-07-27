@@ -150,7 +150,18 @@ class MemberController extends Controller
         try {
             // Import di-scope: siswa dipaksa type siswa; guru menerima guru & staff.
             $import = new MembersImport($scope['scope']);
-            Excel::import($import, $request->file('file'));
+
+            // Salin file upload ke path sementara dengan ekstensi asli.
+            // Menghindari "Path cannot be empty" saat getRealPath() false di Windows.
+            $upload = $request->file('file');
+            $tempPath = storage_path('framework/cache/laravel-excel/import_'.uniqid().'.'.$upload->getClientOriginalExtension());
+            copy($upload->getPathname(), $tempPath);
+
+            try {
+                Excel::import($import, $tempPath);
+            } finally {
+                @unlink($tempPath);
+            }
 
             // Buat akun hotspot OTOMATIS untuk semua anggota hasil import yang belum punya.
             $members = Member::with(['package', 'hotspotUser'])
@@ -193,16 +204,16 @@ class MemberController extends Controller
         return response()->stream(function () use ($scope) {
             $out = fopen('php://output', 'w');
             fputs($out, "\xEF\xBB\xBF"); // BOM agar Excel mengenali UTF-8
-            fputcsv($out, ['member_id', 'name', 'type', 'package', 'class', 'department', 'phone']);
+            fputcsv($out, ['member_id', 'name', 'type', 'package', 'class', 'department', 'phone'], ';');
 
             if ($scope['scope'] === 'siswa') {
                 $paket = Package::where('for_type', 'siswa')->value('name') ?? 'Siswa 3 Jam';
-                fputcsv($out, ['2024001', 'Budi Santoso', 'siswa', $paket, 'X IPA 1', '', '081234567890']);
-                fputcsv($out, ['2024002', 'Ani Lestari', 'siswa', $paket, 'X IPA 1', '', '081200000002']);
+                fputcsv($out, ['2024001', 'Budi Santoso', 'siswa', $paket, 'X IPA 1', '', '081234567890'], ';');
+                fputcsv($out, ['2024002', 'Ani Lestari', 'siswa', $paket, 'X IPA 1', '', '081200000002'], ';');
             } else {
                 $paket = Package::where('for_type', 'guru')->value('name') ?? 'Guru Unlimited';
-                fputcsv($out, ['198501012010011001', 'Siti Aminah, S.Pd', 'guru', $paket, '', 'Matematika', '081298765432']);
-                fputcsv($out, ['199003032015012002', 'Rudi Hartono', 'staff', $paket, '', 'Tata Usaha', '081211112222']);
+                fputcsv($out, ['198501012010011001', 'Siti Aminah, S.Pd', 'guru', $paket, '', 'Matematika', '081298765432'], ';');
+                fputcsv($out, ['199003032015012002', 'Rudi Hartono', 'staff', $paket, '', 'Tata Usaha', '081211112222'], ';');
             }
             fclose($out);
         }, 200, $headers);

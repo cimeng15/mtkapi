@@ -50,6 +50,7 @@
 </div></div>
 <div class="mt-3">{{ $users->links() }}</div>
 
+@push('modals')
 <div class="modal fade" id="addModal" tabindex="-1"><div class="modal-dialog">
     <form method="POST" action="{{ route('hotspot.store') }}" class="modal-content">@csrf
         <div class="modal-header"><h5 class="modal-title">Tambah User Hotspot</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -67,4 +68,5 @@
         <div class="modal-footer"><button class="btn btn-primary">Simpan</button></div>
     </form>
 </div></div>
+@endpush
 @endsection

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\MikrotikSetting;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
@@ -22,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::useBootstrapFive();
+
         // Bagikan router aktif ke shell admin untuk indikator sinyal di topbar.
         View::composer('layouts.admin', function ($view) {
             $router = null;

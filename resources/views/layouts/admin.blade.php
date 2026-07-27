@@ -194,7 +194,7 @@
 
             <div class="nav-heading">Laporan</div>
             <li><a class="nav-link {{ request()->routeIs('reports.index') ? 'active' : '' }}" href="{{ route('reports.index') }}"><i class="bi bi-bar-chart"></i> Laporan</a></li>
-            <li><a class="nav-link {{ request()->routeIs('reports.logs') ? 'active' : '' }}" href="{{ route('reports.logs') }}"><i class="bi bi-clock-history"></i> Log Aktivitas</a></li>
+            <li><a class="nav-link {{ request()->routeIs('reports.logs') ? 'active' : '' }}" href="{{ route('reports.logs') }}"> Log Aktivitas</a></li>
 
             @if($u && $u->isSuperadmin())
             <div class="nav-heading">Sistem</div>
@@ -261,6 +261,7 @@
         </main>
     </div>
 
+    @stack('modals')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function toggleNav(force){
