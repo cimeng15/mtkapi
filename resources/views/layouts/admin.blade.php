@@ -184,6 +184,7 @@
         <ul class="nav flex-column">
             <li><a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
             <li><a class="nav-link {{ request()->routeIs('hotspot.monitor') ? 'active' : '' }}" href="{{ route('hotspot.monitor') }}"><i class="bi bi-broadcast"></i> Monitoring Sesi</a></li>
+            <li><a class="nav-link {{ request()->routeIs('bandwidth.*') ? 'active' : '' }}" href="{{ route('bandwidth.index') }}"><i class="bi bi-speedometer2"></i> Bandwidth</a></li>
 
             <div class="nav-heading">Manajemen</div>
             <li><a class="nav-link {{ request()->routeIs('students.*') ? 'active' : '' }}" href="{{ route('students.index') }}"><i class="bi bi-mortarboard"></i> Data Siswa</a></li>

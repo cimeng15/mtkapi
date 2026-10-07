@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BandwidthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HotspotUserController;
 use App\Http\Controllers\MemberController;
@@ -61,6 +62,10 @@ Route::middleware('auth')->group(function () {
     Route::post('packages/import-router', [PackageController::class, 'importFromRouter'])->name('packages.import-router');
     Route::post('packages/{package}/sync', [PackageController::class, 'sync'])->name('packages.sync');
     Route::resource('packages', PackageController::class)->except(['show']);
+
+    // ---- Bandwidth Monitoring ----
+    Route::get('bandwidth', [BandwidthController::class, 'index'])->name('bandwidth.index');
+    Route::get('bandwidth/poll', [BandwidthController::class, 'poll'])->name('bandwidth.poll');
 
     // ---- Laporan ----
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

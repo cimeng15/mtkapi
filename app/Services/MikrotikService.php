@@ -239,4 +239,30 @@ class MikrotikService
         $query = (new Query('/ip/hotspot/user/profile/remove'))->equal('.id', $mikrotikId);
         $this->client()->query($query)->read();
     }
+
+    // ==================== BANDWIDTH / TRAFFIC ====================
+
+    /**
+     * Daftar interface beserta traffic counter (tx/rx-byte).
+     */
+    public function interfaces(): array
+    {
+        return $this->client()->query('/interface/print')->read();
+    }
+
+    /**
+     * Ambil traffic snapshot per user hotspot aktif (bytes-in, bytes-out).
+     * Mengembalikan array yang sama dengan activeUsers() tapi khusus untuk bandwidth view.
+     */
+    public function activeUsersTraffic(): array
+    {
+        $users = $this->activeUsers();
+        // Urutkan berdasarkan total bytes (descending) — top consumers dulu
+        usort($users, function ($a, $b) {
+            $totalA = ($a['bytes-in'] ?? 0) + ($a['bytes-out'] ?? 0);
+            $totalB = ($b['bytes-in'] ?? 0) + ($b['bytes-out'] ?? 0);
+            return $totalB <=> $totalA;
+        });
+        return $users;
+    }
 }
