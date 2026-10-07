@@ -33,6 +33,8 @@ class MembersImport implements ToModel, WithHeadingRow, SkipsOnError
     use SkipsErrors;
 
     public int $imported = 0;
+    public int $updated = 0;
+    public int $unchanged = 0;
 
     /** Jumlah baris dilewati karena ID sudah terdaftar di scope lain (guru<->siswa). */
     public int $skippedCrossScope = 0;
@@ -84,21 +86,40 @@ class MembersImport implements ToModel, WithHeadingRow, SkipsOnError
         }
 
         // updateOrCreate agar import ulang tidak menggandakan data
-        $member = Member::updateOrCreate(
-            ['member_id' => (string) $memberId],
-            [
-                'name' => (string) $name,
-                'type' => $type,
-                'package_id' => $packageId,
-                'class' => $this->pick($row, ['class', 'kelas', 'rombel']),
-                'department' => $this->pick($row, ['department', 'jurusan', 'bagian']),
-                'phone' => $this->pick($row, ['phone', 'hp', 'telepon', 'no_hp']),
-                'is_active' => true,
-            ]
-        );
+        $attributes = [
+            'name' => (string) $name,
+            'type' => $type,
+            'package_id' => $packageId,
+            'class' => $this->pick($row, ['class', 'kelas', 'rombel']),
+            'department' => $this->pick($row, ['department', 'jurusan', 'bagian']),
+            'phone' => $this->pick($row, ['phone', 'hp', 'telepon', 'no_hp']),
+            'is_active' => true,
+        ];
 
-        $this->imported++;
-        $this->memberIds[] = $member->id;
+        $existing = Member::where('member_id', (string) $memberId)->first();
+
+        if ($existing) {
+            // Cek apakah ada perubahan nyata
+            $changed = false;
+            foreach ($attributes as $key => $val) {
+                if ((string) ($existing->$key ?? '') !== (string) ($val ?? '')) {
+                    $changed = true;
+                    break;
+                }
+            }
+            if ($changed) {
+                $existing->update($attributes);
+                $this->updated++;
+                $this->memberIds[] = $existing->id;
+            } else {
+                $this->unchanged++;
+                $this->memberIds[] = $existing->id;
+            }
+        } else {
+            $member = Member::create(array_merge(['member_id' => (string) $memberId], $attributes));
+            $this->imported++;
+            $this->memberIds[] = $member->id;
+        }
 
         return null; // sudah disimpan manual; jangan disimpan ulang oleh Excel
     }

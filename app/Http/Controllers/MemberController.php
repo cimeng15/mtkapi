@@ -215,7 +215,12 @@ class MemberController extends Controller
             ActivityLog::record('member.import', $import->imported.' '.$scope['singular'].' diimpor, '.$prov['created'].' akun hotspot dibuat.');
 
             $failures = count($import->errors());
-            $msg = "Impor selesai: {$import->imported} {$scope['singular']}. Akun hotspot: {$prov['created']} dibuat, {$prov['skipped']} sudah ada.";
+            $parts = [];
+            if ($import->imported) $parts[] = "{$import->imported} baru ditambahkan";
+            if ($import->updated) $parts[] = "{$import->updated} diperbarui";
+            if ($import->unchanged) $parts[] = "{$import->unchanged} tidak berubah";
+            $msg = "Impor selesai: " . (implode(', ', $parts) ?: '0 data diproses') . ".";
+            $msg .= " Akun hotspot: {$prov['created']} dibuat, {$prov['skipped']} sudah ada.";
             if ($prov['failed']) {
                 $msg .= " {$prov['failed']} gagal ke router ({$prov['error']}).";
             }
