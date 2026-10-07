@@ -1,20 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'User Hotspot')
 
-@php
-    // Sort helper: generate URL with toggled direction
-    function sortUrl($field, $currentSort, $currentDir) {
-        $dir = ($currentSort === $field && $currentDir === 'asc') ? 'desc' : 'asc';
-        return request()->fullUrlWithQuery(['sort' => $field, 'dir' => $dir, 'page' => null]);
-    }
-    function sortIcon($field, $currentSort, $currentDir) {
-        if ($currentSort !== $field) return '<i class="bi bi-chevron-expand sort-icon"></i>';
-        return $currentDir === 'asc'
-            ? '<i class="bi bi-sort-up sort-icon active"></i>'
-            : '<i class="bi bi-sort-down sort-icon active"></i>';
-    }
-@endphp
-
 @section('content')
 {{-- Toolbar --}}
 <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
@@ -53,76 +39,9 @@
     <div id="batchIds"></div>
 </form>
 
-{{-- Table --}}
-<div class="card"><div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
-        <thead class="table-light"><tr>
-            <th style="width:32px"></th>
-            <th class="sortable"><a href="{{ sortUrl('username', $sort, $dir) }}">Username {!! sortIcon('username', $sort, $dir) !!}</a></th>
-            <th class="sortable"><a href="{{ sortUrl('password', $sort, $dir) }}">Password {!! sortIcon('password', $sort, $dir) !!}</a></th>
-            <th>Paket</th>
-            <th>Anggota</th>
-            <th>Tipe</th>
-            <th class="sortable"><a href="{{ sortUrl('status', $sort, $dir) }}">Status {!! sortIcon('status', $sort, $dir) !!}</a></th>
-            <th>Router</th>
-            <th class="text-end">Aksi</th>
-        </tr></thead>
-        <tbody>
-            @forelse($users as $h)
-                <tr>
-                    <td><input type="checkbox" value="{{ $h->id }}" class="form-check-input rowCheck"></td>
-                    <td class="fw-semibold">{{ $h->username }}</td>
-                    <td><code>{{ $h->password }}</code></td>
-                    <td><small>{{ $h->package?->name ?: '-' }}</small></td>
-                    <td><small>{{ $h->member?->name ?: '-' }}</small></td>
-                    <td>
-                        @if($h->member)
-                            @if($h->member->type == 'guru')<span class="badge bg-success-subtle text-success">Guru</span>
-                            @elseif($h->member->type == 'staff')<span class="badge bg-info-subtle text-info">Staff</span>
-                            @else<span class="badge bg-primary-subtle text-primary">Siswa</span>@endif
-                        @else <small class="text-muted">-</small> @endif
-                    </td>
-                    <td>
-                        @if($h->status=='active')<span class="badge bg-success">Aktif</span>
-                        @else<span class="badge bg-secondary">Nonaktif</span>@endif
-                    </td>
-                    <td>
-                        @if($h->synced)<span class="badge bg-success-subtle text-success" title="Tersinkron {{ $h->synced_at?->diffForHumans() }}"><i class="bi bi-check-circle-fill"></i></span>
-                        @else<span class="badge bg-warning-subtle text-warning">Belum</span>@endif
-                    </td>
-                    <td class="text-end">
-                        <div class="action-group">
-                            <form method="POST" action="{{ route('hotspot.sync', $h) }}" class="d-inline">@csrf
-                                <button class="btn-icon btn-icon-ok" title="Sinkron"><i class="bi bi-arrow-repeat"></i></button>
-                            </form>
-                            <form method="POST" action="{{ route('hotspot.toggle', $h) }}" class="d-inline">@csrf
-                                <button class="btn-icon btn-icon-warn" title="Toggle"><i class="bi bi-power"></i></button>
-                            </form>
-                            <form method="POST" action="{{ route('hotspot.destroy', $h) }}" class="d-inline" onsubmit="return confirm('Hapus user {{ $h->username }}?')">@csrf @method('DELETE')
-                                <button class="btn-icon btn-icon-danger" title="Hapus"><i class="bi bi-trash3"></i></button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="9" class="text-center text-muted py-4">Belum ada user hotspot.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-</div></div>
-
-{{-- Pagination + Per Page --}}
-<div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
-    <div class="d-flex align-items-center gap-2">
-        <small class="text-muted">Tampilkan</small>
-        <select class="form-select form-select-sm" style="width:auto" onchange="changePerPage(this.value)">
-            @foreach([10, 20, 50, 100] as $pp)
-                <option value="{{ $pp }}" {{ $perPage == $pp ? 'selected' : '' }}>{{ $pp }}</option>
-            @endforeach
-        </select>
-        <small class="text-muted">dari {{ $users->total() }} data</small>
-    </div>
-    <div>{{ $users->links() }}</div>
+{{-- AJAX-replaceable table area --}}
+<div id="ajax-table">
+    @include('hotspot._table')
 </div>
 
 @push('modals')
@@ -180,13 +99,10 @@
 
 @push('head')
 <style>
-/* Sortable headers */
 th.sortable a{ color:inherit; text-decoration:none; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
 th.sortable a:hover{ color:var(--brand); }
 .sort-icon{ font-size:.7rem; opacity:.35; transition:opacity .15s; }
 .sort-icon.active{ opacity:1; color:var(--brand); }
-
-/* Elegant action buttons */
 .action-group{ display:flex; gap:2px; justify-content:flex-end; }
 .btn-icon{
     width:32px; height:32px; border:none; border-radius:8px; background:transparent;
@@ -194,14 +110,9 @@ th.sortable a:hover{ color:var(--brand); }
     transition:background .12s, color .12s, transform .06s;
 }
 .btn-icon:active{ transform:scale(.9); }
-.btn-icon-ok{ color:var(--online); }
-.btn-icon-ok:hover{ background:var(--bs-success-bg-subtle); }
-.btn-icon-warn{ color:var(--warn); }
-.btn-icon-warn:hover{ background:var(--bs-warning-bg-subtle); }
-.btn-icon-danger{ color:var(--danger); }
-.btn-icon-danger:hover{ background:var(--bs-danger-bg-subtle); }
-
-/* Batch bar */
+.btn-icon-ok{ color:var(--online); } .btn-icon-ok:hover{ background:var(--bs-success-bg-subtle); }
+.btn-icon-warn{ color:var(--warn); } .btn-icon-warn:hover{ background:var(--bs-warning-bg-subtle); }
+.btn-icon-danger{ color:var(--danger); } .btn-icon-danger:hover{ background:var(--bs-danger-bg-subtle); }
 .batch-bar{ display:flex; align-items:center; gap:10px; padding:6px 10px; background:var(--surface-2); border-radius:var(--r-sm); border:1px solid var(--line); }
 .batch-actions{ display:flex; gap:4px; }
 .btn-batch{
@@ -213,20 +124,11 @@ th.sortable a:hover{ color:var(--brand); }
 .btn-batch-danger{ color:var(--danger); } .btn-batch-danger:hover{ background:var(--bs-danger-bg-subtle); }
 .btn-batch-warn{ color:var(--warn); } .btn-batch-warn:hover{ background:var(--bs-warning-bg-subtle); }
 .btn-batch-ok{ color:var(--online); } .btn-batch-ok:hover{ background:var(--bs-success-bg-subtle); }
-
-/* Soft button style */
-.btn-soft-info{
-    background:var(--bs-info-bg-subtle); color:var(--bs-info-text-emphasis); border:1px solid var(--bs-info-border-subtle);
-}
+.btn-soft-info{ background:var(--bs-info-bg-subtle); color:var(--bs-info-text-emphasis); border:1px solid var(--bs-info-border-subtle); }
 .btn-soft-info:hover{ background:var(--bs-info); color:#fff; border-color:var(--bs-info); }
-
-/* Action btn with icon + text */
 .btn-action{ display:inline-flex; align-items:center; gap:5px; font-weight:500; }
 .btn-action i{ font-size:1rem; }
-@media(max-width:575px){
-    .btn-action span{ display:none; } /* icon only on small screens */
-    .btn-action{ padding:.34rem .5rem; }
-}
+@media(max-width:575px){ .btn-action span{ display:none; } .btn-action{ padding:.34rem .5rem; } }
 </style>
 @endpush
 
@@ -241,7 +143,6 @@ function doBatch(action){
     checked.forEach(function(b){ c.insertAdjacentHTML('beforeend','<input type="hidden" name="ids[]" value="'+b.value+'">'); });
     document.getElementById('batchForm').submit();
 }
-
 function changePerPage(val){
     var url = new URL(window.location);
     url.searchParams.set('per_page', val);

@@ -30,6 +30,10 @@ class HotspotUserController extends Controller
         $users = $query->orderBy($sort, $dir)->paginate($perPage)->withQueryString();
         $packages = Package::where('is_active', true)->orderBy('name')->get();
 
+        if ($request->ajax()) {
+            return view('hotspot._table', compact('users', 'perPage', 'sort', 'dir'));
+        }
+
         return view('hotspot.index', compact('users', 'packages', 'perPage', 'sort', 'dir'));
     }
 

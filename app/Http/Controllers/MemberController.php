@@ -53,6 +53,10 @@ class MemberController extends Controller
 
         $members = $query->orderBy($sort, $dir)->paginate($perPage)->withQueryString();
 
+        if ($request->ajax()) {
+            return view('members._table', compact('members', 'scope', 'perPage', 'sort', 'dir'));
+        }
+
         return view('members.index', compact('members', 'scope', 'perPage', 'sort', 'dir'));
     }
 

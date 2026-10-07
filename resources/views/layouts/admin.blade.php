@@ -563,35 +563,69 @@
             if(navigator.vibrate) navigator.vibrate(8);
         });
     });
-    /* Live search: debounce 300ms, min 2 chars or empty to reset */
+    /* Live search: debounce 400ms, AJAX — hanya replace data tabel, tanpa full reload */
     (function(){
-        var timer, lastVal='';
+        var timer, lastVal='', abortCtrl;
         document.querySelectorAll('.live-search').forEach(function(input){
+            var form = input.closest('form');
+            var spinner = form.querySelector('.live-search-spinner');
+
+            /* Prevent normal form submit — use AJAX instead */
+            form.addEventListener('submit', function(e){
+                e.preventDefault();
+                doSearch(input.value.trim());
+            });
+
             input.addEventListener('input', function(){
                 var val = this.value.trim();
-                var form = this.closest('form');
-                var spinner = form.querySelector('.live-search-spinner');
                 clearTimeout(timer);
-                if(val === lastVal) return;
-                /* Show spinner */
-                if(spinner) spinner.classList.remove('d-none');
-                timer = setTimeout(function(){
-                    lastVal = val;
-                    /* Only submit if ≥2 chars or cleared (to reset) */
-                    if(val.length >= 2 || val.length === 0){
-                        form.submit();
-                    } else {
-                        if(spinner) spinner.classList.add('d-none');
-                    }
-                }, 400);
-            });
-            /* Clear: jika user hapus semua teks, reset hasil */
-            input.addEventListener('search', function(){
-                if(this.value === '' && lastVal !== ''){
-                    lastVal = '';
-                    this.closest('form').submit();
+                if(val === lastVal){ if(spinner) spinner.classList.add('d-none'); return; }
+                if(val.length >= 2 || val.length === 0){
+                    if(spinner) spinner.classList.remove('d-none');
+                    timer = setTimeout(function(){ doSearch(val); }, 400);
+                } else {
+                    if(spinner) spinner.classList.add('d-none');
                 }
             });
+
+            input.addEventListener('search', function(){
+                if(this.value === '' && lastVal !== '') doSearch('');
+            });
+
+            function doSearch(val){
+                lastVal = val;
+                if(abortCtrl) abortCtrl.abort();
+                abortCtrl = new AbortController();
+
+                var url = new URL(window.location);
+                if(val) url.searchParams.set('q', val);
+                else url.searchParams.delete('q');
+                url.searchParams.delete('page');
+
+                /* Update URL bar without reload */
+                history.replaceState(null, '', url);
+
+                fetch(url, {
+                    headers: {'X-Requested-With': 'XMLHttpRequest'},
+                    signal: abortCtrl.signal
+                })
+                .then(function(r){ return r.text(); })
+                .then(function(html){
+                    var target = document.getElementById('ajax-table');
+                    if(target){
+                        target.innerHTML = html;
+                        /* Re-bind selectAll checkbox */
+                        var sa = document.getElementById('selectAll');
+                        if(sa) sa.checked = false;
+                    }
+                    if(spinner) spinner.classList.add('d-none');
+                })
+                .catch(function(e){
+                    if(e.name !== 'AbortError'){
+                        if(spinner) spinner.classList.add('d-none');
+                    }
+                });
+            }
         });
     })();
     </script>
