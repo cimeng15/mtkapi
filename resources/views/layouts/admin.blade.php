@@ -128,6 +128,14 @@
         border-bottom:1px solid var(--line); display:flex; align-items:center; gap:.75rem; padding:.7rem 1.35rem; min-height:60px; }
     .topbar .page-title{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.16rem; color:var(--ink); letter-spacing:-.015em; margin:0; }
     .burger{ border:1px solid var(--line); background:var(--surface); width:38px; height:38px; border-radius:9px; display:grid; place-items:center; color:var(--ink); }
+    /* Default: mobile burger visible, desktop burger hidden. Reversed by is-desktop. */
+    .burger-desktop{ display:none; }
+    html.is-desktop .burger-mobile{ display:none!important; }
+    html.is-desktop .burger-desktop{ display:grid; }
+    @media (min-width:992px){
+        .burger-mobile{ display:none!important; }
+        .burger-desktop{ display:grid; }
+    }
 
     .router-pill{ display:inline-flex; align-items:center; gap:.5rem; padding:.4rem .7rem; border-radius:100px; font-size:.8rem; font-weight:500;
         border:1px solid var(--line); background:var(--surface); color:var(--ink-soft); }
@@ -286,44 +294,44 @@
 
     /* ================= MOBILE TOPBAR (mobile) ================= */
     @media (max-width:991.98px){
-        #sidebar{ left:-260px; box-shadow:0 0 60px rgba(0,0,0,.3); }
-        #sidebar.show{ left:0; }
-        #content{ margin-left:0; }
-        #bottomNav{ display:block; }
+        html:not(.is-desktop) #sidebar{ left:-260px; box-shadow:0 0 60px rgba(0,0,0,.3); }
+        html:not(.is-desktop) #sidebar.show{ left:0; }
+        html:not(.is-desktop) #content{ margin-left:0; }
+        html:not(.is-desktop) #bottomNav{ display:block; }
 
-        .topbar{
+        html:not(.is-desktop) .topbar{
             padding:.55rem .9rem; min-height:52px; gap:.5rem;
             border-bottom:none; background:var(--surface);
             box-shadow:0 1px 3px rgba(20,26,30,.06);
         }
-        .topbar .page-title{ font-size:1.02rem; }
-        .topbar .router-pill{ padding:.3rem .55rem; font-size:.72rem; }
-        .topbar .router-pill .rp-host{ display:none; }
-        .topbar .user-chip .u-name,
-        .topbar .user-chip .u-role{ display:none; }
-        .topbar .user-chip .avatar{ width:30px; height:30px; font-size:.72rem; }
+        html:not(.is-desktop) .topbar .page-title{ font-size:1.02rem; }
+        html:not(.is-desktop) .topbar .router-pill{ padding:.3rem .55rem; font-size:.72rem; }
+        html:not(.is-desktop) .topbar .router-pill .rp-host{ display:none; }
+        html:not(.is-desktop) .topbar .user-chip .u-name,
+        html:not(.is-desktop) .topbar .user-chip .u-role{ display:none; }
+        html:not(.is-desktop) .topbar .user-chip .avatar{ width:30px; height:30px; font-size:.72rem; }
 
-        main.app-main{
+        html:not(.is-desktop) main.app-main{
             padding:.85rem .75rem calc(var(--bnav-h) + var(--safe-b) + 1rem);
         }
 
         /* Mobile stat cards: compact */
-        .stat{ padding:.8rem .9rem; }
-        .stat .stat-value{ font-size:1.55rem; }
-        .stat .stat-label{ font-size:.64rem; }
-        .stat .stat-foot{ font-size:.68rem; }
+        html:not(.is-desktop) .stat{ padding:.8rem .9rem; }
+        html:not(.is-desktop) .stat .stat-value{ font-size:1.55rem; }
+        html:not(.is-desktop) .stat .stat-label{ font-size:.64rem; }
+        html:not(.is-desktop) .stat .stat-foot{ font-size:.68rem; }
 
         /* Mobile card tweaks */
-        .card{ border-radius:var(--r-sm); }
-        .card-header{ padding:.7rem .9rem; font-size:.85rem; }
-        .card-body{ padding:.9rem; }
+        html:not(.is-desktop) .card{ border-radius:var(--r-sm); }
+        html:not(.is-desktop) .card-header{ padding:.7rem .9rem; font-size:.85rem; }
+        html:not(.is-desktop) .card-body{ padding:.9rem; }
 
         /* Table mobile: tighter */
-        .table thead th{ padding:.5rem .6rem; font-size:.62rem; }
-        .table tbody td{ padding:.55rem .6rem; font-size:.82rem; }
+        html:not(.is-desktop) .table thead th{ padding:.5rem .6rem; font-size:.62rem; }
+        html:not(.is-desktop) .table tbody td{ padding:.55rem .6rem; font-size:.82rem; }
 
-        /* Mobile uses bottom nav, not desktop sidebar toggle */
-        .burger.d-lg-none{ display:none!important; }
+        /* Mobile uses bottom nav — hide mobile burger since bottom nav covers it */
+        html:not(.is-desktop) .burger-mobile{ display:none!important; }
     }
 
     .scrim{ position:fixed; inset:0; background:rgba(10,17,19,.4); z-index:1029; opacity:0; visibility:hidden; transition:.2s; }
@@ -358,6 +366,17 @@
     @media (prefers-reduced-motion:reduce){ *,*::before,*::after{ animation-duration:.001ms!important; transition-duration:.001ms!important; } }
     </style>
     @stack('head')
+    <script>
+    /* Early detect: Android desktop mode atau layar besar → force-desktop class di body */
+    (function(){
+        var ua = navigator.userAgent;
+        var isAndroidDesktop = /Android/.test(ua) && !/Mobile/.test(ua);
+        var isDesktop = window.innerWidth >= 992 || isAndroidDesktop;
+        if(isDesktop){
+            document.documentElement.classList.add('is-desktop');
+        }
+    })();
+    </script>
 </head>
 <body>
     @php
@@ -413,8 +432,8 @@
     {{-- ========== MAIN CONTENT ========== --}}
     <div id="content">
         <header class="topbar">
-            <button class="burger d-lg-none" onclick="toggleNav()"><i class="bi bi-list"></i></button>
-            <button class="burger d-none d-lg-flex" onclick="toggleSidebar()" title="Toggle sidebar"><i class="bi bi-layout-sidebar-inset"></i></button>
+            <button class="burger burger-mobile" onclick="toggleNav()"><i class="bi bi-list"></i></button>
+            <button class="burger burger-desktop" onclick="toggleSidebar()" title="Toggle sidebar"><i class="bi bi-layout-sidebar-inset"></i></button>
             <h1 class="page-title">@yield('title', 'Dashboard')</h1>
 
             <div class="ms-auto d-flex align-items-center gap-2 gap-md-3">
@@ -554,9 +573,9 @@
         localStorage.setItem('sb-mini', mini ? '1' : '0');
     }
 
-    /* Restore sidebar state from localStorage */
+    /* Restore sidebar mini state from localStorage */
     (function(){
-        if(window.innerWidth >= 992 && localStorage.getItem('sb-mini') === '1'){
+        if(document.documentElement.classList.contains('is-desktop') && localStorage.getItem('sb-mini') === '1'){
             document.getElementById('sidebar').classList.add('mini');
             document.body.classList.add('sb-mini');
         }
@@ -607,7 +626,7 @@
         const ind = document.getElementById('pullIndicator');
         let startY=0, pulling=false, confirmed=false;
         document.addEventListener('touchstart', e => {
-            if(window.scrollY === 0 && window.innerWidth < 992){
+            if(window.scrollY === 0 && !document.documentElement.classList.contains('is-desktop')){
                 /* Jangan trigger kalau touch dimulai di elemen scrollable (tabel, modal, sheet) */
                 var t = e.target;
                 while(t && t !== document.body){
