@@ -5,6 +5,7 @@
 <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
     <form class="d-flex gap-2" method="GET">
         <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="Cari username..." style="min-width:220px">
+        @if(request('per_page'))<input type="hidden" name="per_page" value="{{ request('per_page') }}">@endif
         <button class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
     </form>
     <div class="d-flex gap-2">
@@ -29,7 +30,7 @@
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light"><tr>
             <th style="width:32px"></th>
-            <th>Username</th><th>Password</th><th>Paket</th><th>Anggota</th><th>Status</th><th>Router</th><th class="text-end">Aksi</th>
+            <th>Username</th><th>Password</th><th>Paket</th><th>Anggota</th><th>Tipe</th><th>Status</th><th>Router</th><th class="text-end">Aksi</th>
         </tr></thead>
         <tbody>
             @forelse($users as $h)
@@ -39,6 +40,15 @@
                     <td><code>{{ $h->password }}</code></td>
                     <td>{{ $h->package?->name ?: '-' }}</td>
                     <td><small>{{ $h->member?->name ?: '-' }}</small></td>
+                    <td>
+                        @if($h->member)
+                            @if($h->member->type == 'guru')<span class="badge bg-success-subtle text-success">Guru</span>
+                            @elseif($h->member->type == 'staff')<span class="badge bg-info-subtle text-info">Staff</span>
+                            @else<span class="badge bg-primary-subtle text-primary">Siswa</span>@endif
+                        @else
+                            <small class="text-muted">-</small>
+                        @endif
+                    </td>
                     <td>
                         @if($h->status=='active')<span class="badge bg-success">Aktif</span>
                         @else<span class="badge bg-secondary">Nonaktif</span>@endif
@@ -60,13 +70,25 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="text-center text-muted py-4">Belum ada user hotspot. Buat dari menu <a href="{{ route('students.index') }}">Data Siswa</a> / <a href="{{ route('teachers.index') }}">Data Guru</a>, atau tambah manual.</td></tr>
+                <tr><td colspan="9" class="text-center text-muted py-4">Belum ada user hotspot. Buat dari menu <a href="{{ route('students.index') }}">Data Siswa</a> / <a href="{{ route('teachers.index') }}">Data Guru</a>, atau tambah manual, atau tarik dari router.</td></tr>
             @endforelse
         </tbody>
     </table>
 </div></div>
 
-<div class="mt-3">{{ $users->links() }}</div>
+{{-- Pagination + Per Page --}}
+<div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+    <div class="d-flex align-items-center gap-2">
+        <small class="text-muted">Tampilkan</small>
+        <select class="form-select form-select-sm" style="width:auto" onchange="changePerPage(this.value)">
+            @foreach([10, 20, 50, 100] as $pp)
+                <option value="{{ $pp }}" {{ $perPage == $pp ? 'selected' : '' }}>{{ $pp }}</option>
+            @endforeach
+        </select>
+        <small class="text-muted">dari {{ $users->total() }} data</small>
+    </div>
+    <div>{{ $users->links() }}</div>
+</div>
 
 @push('modals')
 {{-- Modal Tambah Manual --}}
@@ -98,14 +120,15 @@
         <div class="modal-body">
             <div class="alert alert-info mb-3">
                 <i class="bi bi-info-circle me-1"></i>
-                Fitur ini akan membaca semua user hotspot yang ada di MikroTik dan mengimpornya ke database lokal.
+                Fitur ini membaca semua user hotspot di MikroTik, mengimpor ke database, dan <strong>otomatis membuat data anggota (Guru/Siswa)</strong> berdasarkan comment.
             </div>
             <ul class="small mb-3">
-                <li>User yang <strong>sudah ada</strong> di database (username sama) akan <strong>di-skip</strong>, tidak ditimpa.</li>
-                <li>Profil/paket dicocokkan otomatis berdasarkan nama profil di router → paket lokal.</li>
-                <li>Jika profil tidak ditemukan, user tetap diimpor tapi tanpa paket.</li>
-                <li>Password diambil dari router (jika tersedia di API).</li>
-                <li>User <code>default-trial</code> otomatis diabaikan.</li>
+                <li>Comment mengandung kata <code>guru</code> → masuk <strong>Data Guru</strong></li>
+                <li>Comment mengandung kata <code>staff</code> / <code>tendik</code> → masuk <strong>Data Guru</strong> (tipe Staff)</li>
+                <li>Comment lainnya atau tanpa comment → masuk <strong>Data Siswa</strong></li>
+                <li>Nama anggota diambil dari comment (tanpa penanda tipe), misal <code>Siti Aminah (guru)</code> → nama: <strong>Siti Aminah</strong></li>
+                <li>User yang <strong>sudah ada</strong> di database akan <strong>di-skip</strong></li>
+                <li>User <code>default-trial</code> otomatis diabaikan</li>
             </ul>
             <div class="alert alert-warning mb-0">
                 <i class="bi bi-exclamation-triangle me-1"></i>
@@ -132,6 +155,13 @@ function doBatch(action){
     c.innerHTML = '';
     checked.forEach(function(b){ c.insertAdjacentHTML('beforeend','<input type="hidden" name="ids[]" value="'+b.value+'">'); });
     document.getElementById('batchForm').submit();
+}
+
+function changePerPage(val){
+    var url = new URL(window.location);
+    url.searchParams.set('per_page', val);
+    url.searchParams.delete('page');
+    window.location = url;
 }
 </script>
 @endsection

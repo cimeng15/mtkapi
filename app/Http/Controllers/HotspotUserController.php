@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\HotspotUser;
+use App\Models\Member;
 use App\Models\Package;
 use App\Services\MikrotikService;
 use Illuminate\Http\Request;
@@ -18,10 +19,11 @@ class HotspotUserController extends Controller
             $query->where('username', 'like', "%$search%")
                   ->orWhere('comment', 'like', "%$search%");
         }
-        $users = $query->latest()->paginate(20)->withQueryString();
+        $perPage = in_array((int) $request->get('per_page'), [10, 20, 50, 100]) ? (int) $request->get('per_page') : 20;
+        $users = $query->latest()->paginate($perPage)->withQueryString();
         $packages = Package::where('is_active', true)->orderBy('name')->get();
 
-        return view('hotspot.index', compact('users', 'packages'));
+        return view('hotspot.index', compact('users', 'packages', 'perPage'));
     }
 
     /**
@@ -212,6 +214,8 @@ class HotspotUserController extends Controller
     /**
      * Tarik (import) semua user hotspot dari router MikroTik ke database lokal.
      * User yang sudah ada (by username) di-skip, profile dicocokkan ke paket lokal.
+     * Comment dipakai untuk deteksi tipe (guru/siswa) dan nama, lalu otomatis
+     * buat record Member sehingga muncul di Data Siswa / Data Guru.
      */
     public function importFromRouter(Request $request)
     {
@@ -223,6 +227,7 @@ class HotspotUserController extends Controller
 
             $routerUsers = $mt->listHotspotUsers();
             $existingUsernames = HotspotUser::pluck('username')->flip();
+            $existingMemberIds = Member::pluck('member_id')->flip();
 
             // Cache profile→package mapping
             $packages = Package::all()->keyBy('mikrotik_profile');
@@ -230,6 +235,7 @@ class HotspotUserController extends Controller
             $imported = 0;
             $skipped = 0;
             $noProfile = 0;
+            $membersCreated = 0;
 
             foreach ($routerUsers as $ru) {
                 $username = $ru['name'] ?? null;
@@ -246,12 +252,35 @@ class HotspotUserController extends Controller
                 $profile = $ru['profile'] ?? 'default';
                 $package = $packages->get($profile);
                 $disabled = ($ru['disabled'] ?? 'false') === 'true';
+                $comment = $ru['comment'] ?? '';
 
-                HotspotUser::create([
+                // Deteksi tipe dari comment: cari kata guru/staff/siswa
+                $type = $this->detectTypeFromComment($comment);
+                // Ekstrak nama dari comment: hapus "(guru)", "(siswa)", dll
+                $name = $this->extractNameFromComment($comment, $username);
+
+                // Buat Member jika belum ada (by member_id = username)
+                $member = null;
+                if (! $existingMemberIds->has($username)) {
+                    $member = Member::create([
+                        'member_id'  => $username,
+                        'name'       => $name,
+                        'type'       => $type,
+                        'package_id' => $package?->id,
+                        'is_active'  => ! $disabled,
+                    ]);
+                    $existingMemberIds->put($username, true);
+                    $membersCreated++;
+                } else {
+                    $member = Member::where('member_id', $username)->first();
+                }
+
+                $hotspot = HotspotUser::create([
                     'username'    => $username,
                     'password'    => $ru['password'] ?? $username,
                     'package_id'  => $package?->id,
-                    'comment'     => $ru['comment'] ?? null,
+                    'member_id'   => $member?->id,
+                    'comment'     => $comment ?: null,
                     'status'      => $disabled ? 'disabled' : 'active',
                     'synced'      => true,
                     'synced_at'   => now(),
@@ -264,20 +293,55 @@ class HotspotUserController extends Controller
                 $imported++;
             }
 
-            ActivityLog::record('hotspot.import_router', "Import dari router: {$imported} ditambah, {$skipped} sudah ada");
+            ActivityLog::record('hotspot.import_router', "Import dari router: {$imported} user, {$membersCreated} anggota baru");
 
             $msg = "{$imported} user berhasil diimpor dari router.";
+            if ($membersCreated) {
+                $msg .= " {$membersCreated} data anggota (guru/siswa) otomatis dibuat.";
+            }
             if ($skipped) {
                 $msg .= " {$skipped} sudah ada (di-skip).";
             }
             if ($noProfile) {
-                $msg .= " {$noProfile} user tidak punya paket yang cocok (profil router tidak ditemukan di paket lokal).";
+                $msg .= " {$noProfile} user tanpa paket cocok.";
             }
 
             return back()->with('success', $msg);
         } catch (Throwable $e) {
             return back()->with('error', 'Gagal import dari router: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Deteksi tipe anggota dari comment MikroTik.
+     * Mencari kata 'guru', 'staff', atau 'siswa' (case-insensitive).
+     */
+    protected function detectTypeFromComment(string $comment): string
+    {
+        $lower = mb_strtolower($comment);
+        if (str_contains($lower, 'guru')) {
+            return 'guru';
+        }
+        if (str_contains($lower, 'staff') || str_contains($lower, 'tendik') || str_contains($lower, 'tata usaha') || str_contains($lower, 'tu')) {
+            return 'staff';
+        }
+        // Default siswa
+        return 'siswa';
+    }
+
+    /**
+     * Ekstrak nama dari comment. Hapus penanda tipe seperti "(guru)", "(siswa)", dll.
+     * Jika comment kosong, gunakan username sebagai nama.
+     */
+    protected function extractNameFromComment(string $comment, string $fallback): string
+    {
+        if (empty(trim($comment))) {
+            return $fallback;
+        }
+        // Hapus pola "(guru)", "(siswa)", "(staff)", "(tendik)" dll
+        $name = preg_replace('/\s*\(?\b(guru|siswa|staff|tendik|tata\s*usaha|tu)\b\)?\s*/i', ' ', $comment);
+        $name = trim(preg_replace('/\s+/', ' ', $name));
+        return $name ?: $fallback;
     }
 
     /**
