@@ -210,6 +210,77 @@ class HotspotUserController extends Controller
     }
 
     /**
+     * Tarik (import) semua user hotspot dari router MikroTik ke database lokal.
+     * User yang sudah ada (by username) di-skip, profile dicocokkan ke paket lokal.
+     */
+    public function importFromRouter(Request $request)
+    {
+        try {
+            $mt = new MikrotikService();
+            if (! $mt->hasSetting()) {
+                return back()->with('error', 'Belum ada konfigurasi router aktif.');
+            }
+
+            $routerUsers = $mt->listHotspotUsers();
+            $existingUsernames = HotspotUser::pluck('username')->flip();
+
+            // Cache profile→package mapping
+            $packages = Package::all()->keyBy('mikrotik_profile');
+
+            $imported = 0;
+            $skipped = 0;
+            $noProfile = 0;
+
+            foreach ($routerUsers as $ru) {
+                $username = $ru['name'] ?? null;
+                if (! $username || $username === 'default-trial') {
+                    continue;
+                }
+
+                // Skip jika sudah ada di DB
+                if ($existingUsernames->has($username)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $profile = $ru['profile'] ?? 'default';
+                $package = $packages->get($profile);
+                $disabled = ($ru['disabled'] ?? 'false') === 'true';
+
+                HotspotUser::create([
+                    'username'    => $username,
+                    'password'    => $ru['password'] ?? $username,
+                    'package_id'  => $package?->id,
+                    'comment'     => $ru['comment'] ?? null,
+                    'status'      => $disabled ? 'disabled' : 'active',
+                    'synced'      => true,
+                    'synced_at'   => now(),
+                    'mikrotik_id' => $ru['.id'] ?? null,
+                ]);
+
+                if (! $package) {
+                    $noProfile++;
+                }
+                $imported++;
+            }
+
+            ActivityLog::record('hotspot.import_router', "Import dari router: {$imported} ditambah, {$skipped} sudah ada");
+
+            $msg = "{$imported} user berhasil diimpor dari router.";
+            if ($skipped) {
+                $msg .= " {$skipped} sudah ada (di-skip).";
+            }
+            if ($noProfile) {
+                $msg .= " {$noProfile} user tidak punya paket yang cocok (profil router tidak ditemukan di paket lokal).";
+            }
+
+            return back()->with('success', $msg);
+        } catch (Throwable $e) {
+            return back()->with('error', 'Gagal import dari router: '.$e->getMessage());
+        }
+    }
+
+    /**
      * Putuskan sesi aktif (dari halaman monitoring).
      */
     public function disconnect(Request $request)

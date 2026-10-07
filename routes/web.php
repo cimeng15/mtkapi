@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     // ---- User Hotspot & Monitoring ----
     Route::get('hotspot/monitor', [HotspotUserController::class, 'monitor'])->name('hotspot.monitor');
     Route::post('hotspot/disconnect', [HotspotUserController::class, 'disconnect'])->name('hotspot.disconnect');
+    Route::post('hotspot/import-router', [HotspotUserController::class, 'importFromRouter'])->name('hotspot.import-router');
     Route::match(['GET', 'POST'], 'hotspot/batch', [HotspotUserController::class, 'batch'])->name('hotspot.batch');
     Route::get('hotspot', [HotspotUserController::class, 'index'])->name('hotspot.index');
     Route::post('hotspot', [HotspotUserController::class, 'store'])->name('hotspot.store');

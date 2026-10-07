@@ -7,7 +7,10 @@
         <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="Cari username..." style="min-width:220px">
         <button class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
     </form>
-    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addModal"><i class="bi bi-plus-lg me-1"></i>Tambah Manual</button>
+    <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#importRouterModal"><i class="bi bi-cloud-download me-1"></i>Tarik dari Router</button>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addModal"><i class="bi bi-plus-lg me-1"></i>Tambah Manual</button>
+    </div>
 </div>
 
 <div class="d-flex gap-2 align-items-center mb-2">
@@ -66,6 +69,7 @@
 <div class="mt-3">{{ $users->links() }}</div>
 
 @push('modals')
+{{-- Modal Tambah Manual --}}
 <div class="modal fade" id="addModal" tabindex="-1"><div class="modal-dialog">
     <form method="POST" action="{{ route('hotspot.store') }}" class="modal-content">@csrf
         <div class="modal-header"><h5 class="modal-title">Tambah User Hotspot</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -82,6 +86,39 @@
         </div>
         <div class="modal-footer"><button class="btn btn-primary">Simpan</button></div>
     </form>
+</div></div>
+
+{{-- Modal Import dari Router --}}
+<div class="modal fade" id="importRouterModal" tabindex="-1"><div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-cloud-download me-2"></i>Tarik User dari Router</h5>
+            <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-info mb-3">
+                <i class="bi bi-info-circle me-1"></i>
+                Fitur ini akan membaca semua user hotspot yang ada di MikroTik dan mengimpornya ke database lokal.
+            </div>
+            <ul class="small mb-3">
+                <li>User yang <strong>sudah ada</strong> di database (username sama) akan <strong>di-skip</strong>, tidak ditimpa.</li>
+                <li>Profil/paket dicocokkan otomatis berdasarkan nama profil di router → paket lokal.</li>
+                <li>Jika profil tidak ditemukan, user tetap diimpor tapi tanpa paket.</li>
+                <li>Password diambil dari router (jika tersedia di API).</li>
+                <li>User <code>default-trial</code> otomatis diabaikan.</li>
+            </ul>
+            <div class="alert alert-warning mb-0">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                <strong>Pastikan paket/profil sudah diimpor terlebih dahulu</strong> di menu <a href="{{ route('packages.index') }}">Paket / Profil</a> agar pencocokan profil berjalan benar.
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+            <form method="POST" action="{{ route('hotspot.import-router') }}" class="d-inline">@csrf
+                <button class="btn btn-info text-white"><i class="bi bi-cloud-download me-1"></i>Tarik Sekarang</button>
+            </form>
+        </div>
+    </div>
 </div></div>
 @endpush
 
