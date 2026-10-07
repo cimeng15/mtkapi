@@ -522,24 +522,35 @@
         });
     })();
 
-    /* Pull-to-refresh (mobile) */
+    /* Pull-to-refresh (mobile) — threshold tinggi supaya tidak false-trigger */
     (function(){
         const ind = document.getElementById('pullIndicator');
-        let startY=0, pulling=false;
+        let startY=0, pulling=false, confirmed=false;
         document.addEventListener('touchstart', e => {
             if(window.scrollY === 0 && window.innerWidth < 992){
-                startY = e.touches[0].clientY; pulling = true;
+                /* Jangan trigger kalau touch dimulai di elemen scrollable (tabel, modal, sheet) */
+                var t = e.target;
+                while(t && t !== document.body){
+                    if(t.scrollHeight > t.clientHeight + 5 && t.scrollTop > 0) return;
+                    if(t.id === 'moreSheet' || t.classList.contains('modal')) return;
+                    t = t.parentElement;
+                }
+                startY = e.touches[0].clientY; pulling = true; confirmed = false;
             }
         }, {passive:true});
         document.addEventListener('touchmove', e => {
             if(!pulling) return;
             const dy = e.touches[0].clientY - startY;
-            if(dy > 40) ind.classList.add('pulling');
-            else ind.classList.remove('pulling');
+            /* Kalau user scroll ke atas (dy negatif), batalkan */
+            if(dy < 0){ pulling = false; ind.classList.remove('pulling'); return; }
+            /* Threshold 120px supaya tidak sensitif */
+            if(dy > 120){ ind.classList.add('pulling'); confirmed = true; }
+            else{ ind.classList.remove('pulling'); confirmed = false; }
         }, {passive:true});
         document.addEventListener('touchend', () => {
-            if(!pulling) return; pulling = false;
-            if(ind.classList.contains('pulling')){
+            if(!pulling){ return; }
+            pulling = false;
+            if(confirmed){
                 location.reload();
             }
             ind.classList.remove('pulling');
