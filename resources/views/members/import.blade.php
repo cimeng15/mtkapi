@@ -20,7 +20,7 @@
                 @csrf
                 <div class="mb-3">
                     <label class="form-label">Pilih file (.xlsx, .xls, .csv) — maks 5MB</label>
-                    <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv" required>
+                    <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/plain" required>
                     <div class="form-text text-muted small">Template CSV menggunakan pemisah titik koma (;) agar tampil rapi di Excel.</div>
                 </div>
                 <button class="btn btn-success"><i class="bi bi-upload me-1"></i>Import Sekarang</button>
