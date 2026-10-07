@@ -54,25 +54,76 @@
     a{ text-decoration:none; }
 
     /* ================= SIDEBAR (desktop ≥992px) ================= */
-    #sidebar{ width:248px; min-height:100vh; position:fixed; top:0; left:0; z-index:1030; transition:left .22s ease;
+    #sidebar{ width:248px; min-height:100vh; position:fixed; top:0; left:0; z-index:1030;
+        transition:width .28s cubic-bezier(.4,0,.2,1), left .22s ease;
         background:linear-gradient(180deg,var(--sidebar),var(--sidebar-2)); color:#9FB0B2;
-        border-right:1px solid rgba(255,255,255,.05); display:flex; flex-direction:column; }
-    #sidebar .brand{ display:flex; align-items:center; gap:.7rem; padding:1.15rem 1.25rem; color:#fff; }
-    #sidebar .brand .mark{ width:34px; height:34px; border-radius:9px; display:grid; place-items:center; font-size:1.05rem; color:#fff;
+        border-right:1px solid rgba(255,255,255,.05); display:flex; flex-direction:column; overflow:hidden; }
+    #sidebar .brand{ display:flex; align-items:center; gap:.7rem; padding:1.15rem 1.25rem; color:#fff; white-space:nowrap; }
+    #sidebar .brand .mark{ width:34px; height:34px; min-width:34px; border-radius:9px; display:grid; place-items:center; font-size:1.05rem; color:#fff;
         background:linear-gradient(150deg,var(--brand),#0B5A52); box-shadow:0 4px 14px -4px rgba(14,110,100,.7); }
-    #sidebar .brand .wm{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1rem; letter-spacing:-.01em; line-height:1.05; }
+    #sidebar .brand .wm{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1rem; letter-spacing:-.01em; line-height:1.05;
+        opacity:1; transition:opacity .18s; overflow:hidden; }
     #sidebar .brand .wm small{ display:block; font-family:'Inter',sans-serif; font-weight:500; font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:#5E7173; margin-top:2px; }
-    #sidebar .nav{ padding:.35rem .6rem 1.5rem; overflow-y:auto; }
-    #sidebar .nav-heading{ color:#4E6062; font-size:.66rem; font-weight:600; text-transform:uppercase; letter-spacing:.14em; padding:1.1rem .7rem .4rem; }
-    #sidebar .nav-link{ position:relative; color:#9FB0B2; padding:.55rem .7rem; margin:1px 0; border-radius:8px; display:flex; align-items:center; gap:.7rem; font-size:.9rem; font-weight:500; transition:background .14s,color .14s; }
-    #sidebar .nav-link i{ font-size:1.02rem; opacity:.85; width:1.1rem; text-align:center; }
+    #sidebar .nav{ padding:.35rem .6rem 1.5rem; overflow-y:auto; overflow-x:hidden; flex:1; }
+    #sidebar .nav-heading{ color:#4E6062; font-size:.66rem; font-weight:600; text-transform:uppercase; letter-spacing:.14em; padding:1.1rem .7rem .4rem;
+        white-space:nowrap; opacity:1; transition:opacity .18s; overflow:hidden; }
+    #sidebar .nav-link{ position:relative; color:#9FB0B2; padding:.55rem .7rem; margin:1px 0; border-radius:8px; display:flex; align-items:center; gap:.7rem; font-size:.9rem; font-weight:500;
+        transition:background .14s,color .14s,padding .28s; white-space:nowrap; overflow:hidden; }
+    #sidebar .nav-link i{ font-size:1.02rem; opacity:.85; width:1.1rem; min-width:1.1rem; text-align:center; transition:transform .15s; }
     #sidebar .nav-link:hover{ background:rgba(255,255,255,.05); color:#EAF1F1; }
+    #sidebar .nav-link:hover i{ transform:scale(1.12); }
     #sidebar .nav-link.active{ background:rgba(14,110,100,.16); color:#EAF6F4; }
     #sidebar .nav-link.active i{ opacity:1; color:#39C7B4; }
     #sidebar .nav-link.active::before{ content:""; position:absolute; left:-.6rem; top:20%; bottom:20%; width:3px; border-radius:0 3px 3px 0; background:linear-gradient(180deg,#2FB9A7,var(--brand)); }
+    /* nav-link text label (for collapse/expand) */
+    #sidebar .nav-link .lk-text{ opacity:1; transition:opacity .18s; }
+
+    /* Sidebar collapse toggle button */
+    #sidebar .sb-toggle{ display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.65rem; margin:.4rem .6rem .8rem;
+        border-radius:8px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03);
+        color:#6B8183; font-size:.76rem; font-weight:500; cursor:pointer; white-space:nowrap; overflow:hidden;
+        transition:background .14s, border-color .14s; }
+    #sidebar .sb-toggle:hover{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.14); color:#9FB0B2; }
+    #sidebar .sb-toggle i{ font-size:.9rem; transition:transform .28s; min-width:1rem; text-align:center; }
+    #sidebar .sb-toggle .tog-text{ opacity:1; transition:opacity .18s; }
+
+    /* Sidebar user card at bottom */
+    #sidebar .sb-user{ display:flex; align-items:center; gap:.6rem; padding:.75rem 1rem; border-top:1px solid rgba(255,255,255,.06);
+        white-space:nowrap; overflow:hidden; text-decoration:none; transition:background .14s; }
+    #sidebar .sb-user:hover{ background:rgba(255,255,255,.04); }
+    #sidebar .sb-user .sb-avatar{ width:32px; height:32px; min-width:32px; border-radius:50%; display:grid; place-items:center;
+        font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:.72rem; color:#fff;
+        background:linear-gradient(150deg,var(--brand),var(--brand-strong)); }
+    #sidebar .sb-user .sb-uinfo{ opacity:1; transition:opacity .18s; overflow:hidden; }
+    #sidebar .sb-user .sb-uname{ font-size:.82rem; font-weight:600; color:#D0DBDD; line-height:1.1; }
+    #sidebar .sb-user .sb-urole{ font-size:.64rem; color:#5E7173; text-transform:uppercase; letter-spacing:.06em; }
+
+    /* ---- Collapsed sidebar (mini mode) ---- */
+    #sidebar.mini{ width:68px; }
+    #sidebar.mini .brand{ padding:1.15rem .9rem; justify-content:center; }
+    #sidebar.mini .brand .wm{ opacity:0; width:0; }
+    #sidebar.mini .nav{ padding:.35rem .45rem 1.5rem; }
+    #sidebar.mini .nav-heading{ opacity:0; height:0; padding:0; margin:0; pointer-events:none; }
+    #sidebar.mini .nav-link{ padding:.55rem 0; justify-content:center; border-radius:10px; }
+    #sidebar.mini .nav-link .lk-text{ opacity:0; width:0; overflow:hidden; }
+    #sidebar.mini .nav-link.active::before{ left:-.45rem; }
+    #sidebar.mini .sb-toggle{ justify-content:center; }
+    #sidebar.mini .sb-toggle i{ transform:rotate(180deg); }
+    #sidebar.mini .sb-toggle .tog-text{ opacity:0; width:0; }
+    #sidebar.mini .sb-user{ justify-content:center; padding:.75rem .5rem; }
+    #sidebar.mini .sb-user .sb-uinfo{ opacity:0; width:0; }
+
+    /* Tooltip for collapsed sidebar */
+    #sidebar.mini .nav-link{ position:relative; }
+    #sidebar.mini .nav-link::after{ content:attr(data-tip); position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%);
+        background:var(--sidebar); color:#EAF1F1; padding:.32rem .6rem; border-radius:6px; font-size:.78rem; font-weight:500;
+        white-space:nowrap; pointer-events:none; opacity:0; transition:opacity .15s; z-index:9999;
+        box-shadow:0 4px 16px rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.08); }
+    #sidebar.mini .nav-link:hover::after{ opacity:1; }
 
     /* ================= CONTENT / TOPBAR ================= */
-    #content{ margin-left:248px; transition:margin .22s ease; min-height:100vh; display:flex; flex-direction:column; }
+    #content{ margin-left:248px; transition:margin .28s cubic-bezier(.4,0,.2,1); min-height:100vh; display:flex; flex-direction:column; }
+    body.sb-mini #content{ margin-left:68px; }
     .topbar{ position:sticky; top:0; z-index:1020; background:rgba(255,255,255,.86); backdrop-filter:saturate(1.4) blur(10px);
         border-bottom:1px solid var(--line); display:flex; align-items:center; gap:.75rem; padding:.7rem 1.35rem; min-height:60px; }
     .topbar .page-title{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.16rem; color:var(--ink); letter-spacing:-.015em; margin:0; }
@@ -271,8 +322,8 @@
         .table thead th{ padding:.5rem .6rem; font-size:.62rem; }
         .table tbody td{ padding:.55rem .6rem; font-size:.82rem; }
 
-        /* Hide the desktop sidebar burger on mobile (we use bottom nav) */
-        .burger{ display:none!important; }
+        /* Mobile uses bottom nav, not desktop sidebar toggle */
+        .burger.d-lg-none{ display:none!important; }
     }
 
     .scrim{ position:fixed; inset:0; background:rgba(10,17,19,.4); z-index:1029; opacity:0; visibility:hidden; transition:.2s; }
@@ -322,27 +373,39 @@
             <span class="wm">Hotspot<small>Kontrol Sekolah</small></span>
         </div>
         <ul class="nav flex-column">
-            <li><a class="nav-link {{ $r->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
-            <li><a class="nav-link {{ $r->routeIs('hotspot.monitor') ? 'active' : '' }}" href="{{ route('hotspot.monitor') }}"><i class="bi bi-broadcast"></i> Monitoring Sesi</a></li>
-            <li><a class="nav-link {{ $r->routeIs('bandwidth.*') ? 'active' : '' }}" href="{{ route('bandwidth.index') }}"><i class="bi bi-speedometer2"></i> Bandwidth</a></li>
+            <li><a class="nav-link {{ $r->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}" data-tip="Dashboard"><i class="bi bi-grid-1x2"></i><span class="lk-text">Dashboard</span></a></li>
+            <li><a class="nav-link {{ $r->routeIs('hotspot.monitor') ? 'active' : '' }}" href="{{ route('hotspot.monitor') }}" data-tip="Monitoring Sesi"><i class="bi bi-broadcast"></i><span class="lk-text">Monitoring Sesi</span></a></li>
+            <li><a class="nav-link {{ $r->routeIs('bandwidth.*') ? 'active' : '' }}" href="{{ route('bandwidth.index') }}" data-tip="Bandwidth"><i class="bi bi-speedometer2"></i><span class="lk-text">Bandwidth</span></a></li>
 
             <div class="nav-heading">Manajemen</div>
-            <li><a class="nav-link {{ $r->routeIs('students.*') ? 'active' : '' }}" href="{{ route('students.index') }}"><i class="bi bi-mortarboard"></i> Data Siswa</a></li>
-            <li><a class="nav-link {{ $r->routeIs('teachers.*') ? 'active' : '' }}" href="{{ route('teachers.index') }}"><i class="bi bi-person-badge"></i> Data Guru &amp; Tendik</a></li>
-            <li><a class="nav-link {{ $r->routeIs('hotspot.index') ? 'active' : '' }}" href="{{ route('hotspot.index') }}"><i class="bi bi-person-vcard"></i> User Hotspot</a></li>
-            <li><a class="nav-link {{ $r->routeIs('vouchers.*') ? 'active' : '' }}" href="{{ route('vouchers.index') }}"><i class="bi bi-ticket-perforated"></i> Voucher</a></li>
-            <li><a class="nav-link {{ $r->routeIs('packages.*') ? 'active' : '' }}" href="{{ route('packages.index') }}"><i class="bi bi-box-seam"></i> Paket / Profil</a></li>
+            <li><a class="nav-link {{ $r->routeIs('students.*') ? 'active' : '' }}" href="{{ route('students.index') }}" data-tip="Data Siswa"><i class="bi bi-mortarboard"></i><span class="lk-text">Data Siswa</span></a></li>
+            <li><a class="nav-link {{ $r->routeIs('teachers.*') ? 'active' : '' }}" href="{{ route('teachers.index') }}" data-tip="Data Guru &amp; Tendik"><i class="bi bi-person-badge"></i><span class="lk-text">Data Guru &amp; Tendik</span></a></li>
+            <li><a class="nav-link {{ $r->routeIs('hotspot.index') ? 'active' : '' }}" href="{{ route('hotspot.index') }}" data-tip="User Hotspot"><i class="bi bi-person-vcard"></i><span class="lk-text">User Hotspot</span></a></li>
+            <li><a class="nav-link {{ $r->routeIs('vouchers.*') ? 'active' : '' }}" href="{{ route('vouchers.index') }}" data-tip="Voucher"><i class="bi bi-ticket-perforated"></i><span class="lk-text">Voucher</span></a></li>
+            <li><a class="nav-link {{ $r->routeIs('packages.*') ? 'active' : '' }}" href="{{ route('packages.index') }}" data-tip="Paket / Profil"><i class="bi bi-box-seam"></i><span class="lk-text">Paket / Profil</span></a></li>
 
             <div class="nav-heading">Laporan</div>
-            <li><a class="nav-link {{ $r->routeIs('reports.index') ? 'active' : '' }}" href="{{ route('reports.index') }}"><i class="bi bi-bar-chart"></i> Laporan</a></li>
-            <li><a class="nav-link {{ $r->routeIs('reports.logs') ? 'active' : '' }}" href="{{ route('reports.logs') }}"> Log Aktivitas</a></li>
+            <li><a class="nav-link {{ $r->routeIs('reports.index') ? 'active' : '' }}" href="{{ route('reports.index') }}" data-tip="Laporan"><i class="bi bi-bar-chart"></i><span class="lk-text">Laporan</span></a></li>
+            <li><a class="nav-link {{ $r->routeIs('reports.logs') ? 'active' : '' }}" href="{{ route('reports.logs') }}" data-tip="Log Aktivitas"><i class="bi bi-clock-history"></i><span class="lk-text">Log Aktivitas</span></a></li>
 
             @if($u && $u->isSuperadmin())
             <div class="nav-heading">Sistem</div>
-            <li><a class="nav-link {{ $r->routeIs('settings.*') ? 'active' : '' }}" href="{{ route('settings.mikrotik.edit') }}"><i class="bi bi-router"></i> Pengaturan Router</a></li>
-            <li><a class="nav-link {{ $r->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}"><i class="bi bi-shield-lock"></i> Kelola Admin</a></li>
+            <li><a class="nav-link {{ $r->routeIs('settings.*') ? 'active' : '' }}" href="{{ route('settings.mikrotik.edit') }}" data-tip="Pengaturan Router"><i class="bi bi-router"></i><span class="lk-text">Pengaturan Router</span></a></li>
+            <li><a class="nav-link {{ $r->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}" data-tip="Kelola Admin"><i class="bi bi-shield-lock"></i><span class="lk-text">Kelola Admin</span></a></li>
             @endif
         </ul>
+
+        <div class="sb-toggle" onclick="toggleSidebar()" title="Perkecil sidebar">
+            <i class="bi bi-chevron-bar-left"></i><span class="tog-text">Perkecil</span>
+        </div>
+
+        <a href="{{ route('profile.edit') }}" class="sb-user">
+            <span class="sb-avatar">{{ strtoupper(mb_substr($u?->name ?? 'A',0,1)) }}{{ strtoupper(mb_substr(strstr($u?->name.' ',' '),1,1)) }}</span>
+            <span class="sb-uinfo">
+                <span class="sb-uname d-block">{{ $u?->name }}</span>
+                <span class="sb-urole">{{ ucfirst($u?->role) }}</span>
+            </span>
+        </a>
     </nav>
 
     <div class="scrim" id="scrim" onclick="toggleNav(false)"></div>
@@ -351,6 +414,7 @@
     <div id="content">
         <header class="topbar">
             <button class="burger d-lg-none" onclick="toggleNav()"><i class="bi bi-list"></i></button>
+            <button class="burger d-none d-lg-flex" onclick="toggleSidebar()" title="Toggle sidebar"><i class="bi bi-layout-sidebar-inset"></i></button>
             <h1 class="page-title">@yield('title', 'Dashboard')</h1>
 
             <div class="ms-auto d-flex align-items-center gap-2 gap-md-3">
@@ -482,7 +546,23 @@
     @stack('modals')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    /* Desktop sidebar toggle */
+    /* Desktop sidebar toggle (expand/collapse) */
+    function toggleSidebar(){
+        const sb = document.getElementById('sidebar');
+        const mini = sb.classList.toggle('mini');
+        document.body.classList.toggle('sb-mini', mini);
+        localStorage.setItem('sb-mini', mini ? '1' : '0');
+    }
+
+    /* Restore sidebar state from localStorage */
+    (function(){
+        if(window.innerWidth >= 992 && localStorage.getItem('sb-mini') === '1'){
+            document.getElementById('sidebar').classList.add('mini');
+            document.body.classList.add('sb-mini');
+        }
+    })();
+
+    /* Desktop sidebar toggle (mobile overlay) */
     function toggleNav(force){
         const sb=document.getElementById('sidebar'), sc=document.getElementById('scrim');
         const show = force===undefined ? !sb.classList.contains('show') : force;
