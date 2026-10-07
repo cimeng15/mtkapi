@@ -2,8 +2,11 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#0E1719">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>@yield('title', 'Dashboard') — {{ config('app.name') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -12,7 +15,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
     :root{
-        /* ---- Ruang Kontrol tokens ---- */
         --ink:#141A1E; --ink-soft:#5B6873; --line:#E4E8EC;
         --canvas:#EBEEF1; --surface:#FFFFFF; --surface-2:#F4F6F8;
         --brand:#0E6E64; --brand-strong:#0A544C; --brand-tint:#E7F1EF; --brand-border:#CADFDB;
@@ -22,8 +24,9 @@
         --shadow:0 1px 2px rgba(20,26,30,.05), 0 14px 30px -20px rgba(20,26,30,.28);
         --r:14px; --r-sm:9px;
         --sidebar:#0E1719; --sidebar-2:#0A1113;
+        --bnav-h:64px; /* bottom nav height */
+        --safe-b:env(safe-area-inset-bottom, 0px);
 
-        /* ---- retheme Bootstrap so every screen inherits the palette ---- */
         --bs-body-bg:var(--canvas); --bs-body-color:var(--ink);
         --bs-border-color:var(--line);
         --bs-primary:#0E6E64; --bs-primary-rgb:14,110,100;
@@ -50,7 +53,7 @@
     code{ color:var(--brand-strong); background:var(--brand-tint); padding:.06em .42em; border-radius:6px; font-weight:500; }
     a{ text-decoration:none; }
 
-    /* ================= SIDEBAR ================= */
+    /* ================= SIDEBAR (desktop ≥992px) ================= */
     #sidebar{ width:248px; min-height:100vh; position:fixed; top:0; left:0; z-index:1030; transition:left .22s ease;
         background:linear-gradient(180deg,var(--sidebar),var(--sidebar-2)); color:#9FB0B2;
         border-right:1px solid rgba(255,255,255,.05); display:flex; flex-direction:column; }
@@ -75,12 +78,11 @@
     .topbar .page-title{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.16rem; color:var(--ink); letter-spacing:-.015em; margin:0; }
     .burger{ border:1px solid var(--line); background:var(--surface); width:38px; height:38px; border-radius:9px; display:grid; place-items:center; color:var(--ink); }
 
-    /* router signal indicator — the signature */
     .router-pill{ display:inline-flex; align-items:center; gap:.5rem; padding:.4rem .7rem; border-radius:100px; font-size:.8rem; font-weight:500;
         border:1px solid var(--line); background:var(--surface); color:var(--ink-soft); }
     .router-pill .dot{ width:8px; height:8px; border-radius:50%; background:var(--ink-soft); flex:none; }
     .router-pill.is-on{ border-color:var(--brand-border); background:var(--brand-tint); color:var(--brand-strong); }
-    .router-pill.is-on .dot{ background:var(--brand); } /* identitas router aktif, bukan klaim koneksi live */
+    .router-pill.is-on .dot{ background:var(--brand); }
     .router-pill .rp-host{ font-family:'JetBrains Mono',monospace; font-size:.76rem; }
     @keyframes signal{ 0%{ box-shadow:0 0 0 0 rgba(46,158,118,.55);} 70%{ box-shadow:0 0 0 7px rgba(46,158,118,0);} 100%{ box-shadow:0 0 0 0 rgba(46,158,118,0);} }
 
@@ -158,55 +160,194 @@
     .stat.is-live .stat-value{ color:var(--brand-strong); }
     .live-dot{ width:8px; height:8px; border-radius:50%; background:var(--online); display:inline-block; box-shadow:0 0 0 0 rgba(46,158,118,.5); animation:signal 2.4s ease-out infinite; }
 
-    /* ================= RESPONSIVE ================= */
+    /* ================= BOTTOM NAV (mobile <992px) ================= */
+    #bottomNav{
+        display:none; /* hidden on desktop */
+        position:fixed; bottom:0; left:0; right:0; z-index:1040;
+        background:var(--surface); border-top:1px solid var(--line);
+        padding-bottom:var(--safe-b);
+        box-shadow:0 -2px 20px rgba(20,26,30,.08);
+    }
+    #bottomNav .bnav-inner{
+        display:flex; justify-content:space-around; align-items:stretch;
+        height:var(--bnav-h); max-width:600px; margin:0 auto;
+    }
+    #bottomNav .bnav-item{
+        flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+        color:var(--ink-soft); text-decoration:none; font-size:.62rem; font-weight:600;
+        letter-spacing:.02em; gap:2px; position:relative;
+        transition:color .15s; -webkit-tap-highlight-color:transparent;
+        padding:4px 0;
+    }
+    #bottomNav .bnav-item i{ font-size:1.25rem; transition:transform .15s; }
+    #bottomNav .bnav-item.active{ color:var(--brand); }
+    #bottomNav .bnav-item.active i{ transform:scale(1.08); }
+    #bottomNav .bnav-item.active::after{
+        content:""; position:absolute; top:0; left:25%; right:25%; height:2.5px;
+        border-radius:0 0 3px 3px; background:var(--brand);
+    }
+    #bottomNav .bnav-item:active i{ transform:scale(.9); }
+    /* live badge on bnav */
+    #bottomNav .bnav-item .bnav-badge{
+        position:absolute; top:6px; right:calc(50% - 18px);
+        min-width:16px; height:16px; border-radius:100px; padding:0 4px;
+        background:var(--online); color:#fff; font-size:.56rem; font-weight:700;
+        display:flex; align-items:center; justify-content:center;
+        box-shadow:0 0 0 2px var(--surface);
+    }
+
+    /* ---- "More" bottom sheet ---- */
+    #moreSheet{
+        position:fixed; bottom:0; left:0; right:0; z-index:1050;
+        background:var(--surface); border-radius:20px 20px 0 0;
+        box-shadow:0 -8px 40px rgba(10,17,19,.18);
+        transform:translateY(100%); transition:transform .28s cubic-bezier(.4,.0,.2,1);
+        padding-bottom:var(--safe-b);
+        max-height:80vh; overflow-y:auto;
+    }
+    #moreSheet.open{ transform:translateY(0); }
+    #moreSheet .sheet-handle{
+        width:36px; height:4px; border-radius:4px; background:var(--line);
+        margin:10px auto 6px;
+    }
+    #moreSheet .sheet-grid{
+        display:grid; grid-template-columns:repeat(4,1fr); gap:4px;
+        padding:8px 12px 16px;
+    }
+    #moreSheet .sheet-item{
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        padding:14px 4px 10px; border-radius:var(--r); color:var(--ink);
+        text-decoration:none; font-size:.72rem; font-weight:500; gap:6px;
+        transition:background .12s; -webkit-tap-highlight-color:transparent;
+    }
+    #moreSheet .sheet-item:active{ background:var(--brand-tint); }
+    #moreSheet .sheet-item i{ font-size:1.4rem; color:var(--brand); }
+    #moreSheet .sheet-item.active{ background:var(--brand-tint); color:var(--brand-strong); font-weight:600; }
+    #moreSheet .sheet-section{
+        font-size:.64rem; font-weight:600; text-transform:uppercase; letter-spacing:.1em;
+        color:var(--ink-soft); padding:12px 20px 4px;
+    }
+    .sheet-scrim{
+        position:fixed; inset:0; z-index:1045; background:rgba(10,17,19,.35);
+        opacity:0; visibility:hidden; transition:opacity .2s, visibility .2s;
+    }
+    .sheet-scrim.open{ opacity:1; visibility:visible; }
+
+    /* ================= MOBILE TOPBAR (mobile) ================= */
     @media (max-width:991.98px){
         #sidebar{ left:-260px; box-shadow:0 0 60px rgba(0,0,0,.3); }
         #sidebar.show{ left:0; }
         #content{ margin-left:0; }
+        #bottomNav{ display:block; }
+
+        .topbar{
+            padding:.55rem .9rem; min-height:52px; gap:.5rem;
+            border-bottom:none; background:var(--surface);
+            box-shadow:0 1px 3px rgba(20,26,30,.06);
+        }
+        .topbar .page-title{ font-size:1.02rem; }
+        .topbar .router-pill{ padding:.3rem .55rem; font-size:.72rem; }
         .topbar .router-pill .rp-host{ display:none; }
-        main.app-main{ padding:1.15rem 1rem 3rem; }
+        .topbar .user-chip .u-name,
+        .topbar .user-chip .u-role{ display:none; }
+        .topbar .user-chip .avatar{ width:30px; height:30px; font-size:.72rem; }
+
+        main.app-main{
+            padding:.85rem .75rem calc(var(--bnav-h) + var(--safe-b) + 1rem);
+        }
+
+        /* Mobile stat cards: compact */
+        .stat{ padding:.8rem .9rem; }
+        .stat .stat-value{ font-size:1.55rem; }
+        .stat .stat-label{ font-size:.64rem; }
+        .stat .stat-foot{ font-size:.68rem; }
+
+        /* Mobile card tweaks */
+        .card{ border-radius:var(--r-sm); }
+        .card-header{ padding:.7rem .9rem; font-size:.85rem; }
+        .card-body{ padding:.9rem; }
+
+        /* Table mobile: tighter */
+        .table thead th{ padding:.5rem .6rem; font-size:.62rem; }
+        .table tbody td{ padding:.55rem .6rem; font-size:.82rem; }
+
+        /* Hide the desktop sidebar burger on mobile (we use bottom nav) */
+        .burger{ display:none!important; }
     }
+
     .scrim{ position:fixed; inset:0; background:rgba(10,17,19,.4); z-index:1029; opacity:0; visibility:hidden; transition:.2s; }
     .scrim.show{ opacity:1; visibility:visible; }
+
+    /* ================= PULL-TO-REFRESH indicator ================= */
+    #pullIndicator{
+        position:fixed; top:0; left:50%; transform:translateX(-50%) translateY(-50px);
+        z-index:9999; transition:transform .25s ease;
+        width:40px; height:40px; border-radius:50%;
+        background:var(--surface); box-shadow:var(--shadow);
+        display:grid; place-items:center;
+    }
+    #pullIndicator.pulling{ transform:translateX(-50%) translateY(16px); }
+    #pullIndicator .spinner-border{ width:20px; height:20px; border-width:2px; color:var(--brand); }
+
+    /* ================= SWIPE HINT (first visit) ================= */
+    .swipe-toast{
+        position:fixed; bottom:calc(var(--bnav-h) + var(--safe-b) + 12px);
+        left:50%; transform:translateX(-50%); z-index:1060;
+        background:var(--sidebar); color:#fff; padding:.6rem 1rem;
+        border-radius:100px; font-size:.78rem; font-weight:500;
+        box-shadow:var(--shadow); animation:toastIn .35s ease both;
+        display:flex; align-items:center; gap:.5rem;
+    }
+    @keyframes toastIn{ from{opacity:0;transform:translateX(-50%) translateY(10px);} to{opacity:1;transform:translateX(-50%) translateY(0);} }
+
+    /* ================= HAPTIC-LIKE press feedback ================= */
+    .press-scale{ transition:transform .08s; }
+    .press-scale:active{ transform:scale(.95); }
 
     @media (prefers-reduced-motion:reduce){ *,*::before,*::after{ animation-duration:.001ms!important; transition-duration:.001ms!important; } }
     </style>
     @stack('head')
 </head>
 <body>
-    @php $u = auth()->user(); $nr = $navRouter ?? null; @endphp
+    @php
+        $u = auth()->user();
+        $nr = $navRouter ?? null;
+        $r = request();
+    @endphp
 
+    {{-- ========== DESKTOP SIDEBAR (hidden on mobile) ========== --}}
     <nav id="sidebar">
         <div class="brand">
             <span class="mark"><i class="bi bi-broadcast-pin"></i></span>
             <span class="wm">Hotspot<small>Kontrol Sekolah</small></span>
         </div>
         <ul class="nav flex-column">
-            <li><a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
-            <li><a class="nav-link {{ request()->routeIs('hotspot.monitor') ? 'active' : '' }}" href="{{ route('hotspot.monitor') }}"><i class="bi bi-broadcast"></i> Monitoring Sesi</a></li>
-            <li><a class="nav-link {{ request()->routeIs('bandwidth.*') ? 'active' : '' }}" href="{{ route('bandwidth.index') }}"><i class="bi bi-speedometer2"></i> Bandwidth</a></li>
+            <li><a class="nav-link {{ $r->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
+            <li><a class="nav-link {{ $r->routeIs('hotspot.monitor') ? 'active' : '' }}" href="{{ route('hotspot.monitor') }}"><i class="bi bi-broadcast"></i> Monitoring Sesi</a></li>
+            <li><a class="nav-link {{ $r->routeIs('bandwidth.*') ? 'active' : '' }}" href="{{ route('bandwidth.index') }}"><i class="bi bi-speedometer2"></i> Bandwidth</a></li>
 
             <div class="nav-heading">Manajemen</div>
-            <li><a class="nav-link {{ request()->routeIs('students.*') ? 'active' : '' }}" href="{{ route('students.index') }}"><i class="bi bi-mortarboard"></i> Data Siswa</a></li>
-            <li><a class="nav-link {{ request()->routeIs('teachers.*') ? 'active' : '' }}" href="{{ route('teachers.index') }}"><i class="bi bi-person-badge"></i> Data Guru &amp; Tendik</a></li>
-            <li><a class="nav-link {{ request()->routeIs('hotspot.index') ? 'active' : '' }}" href="{{ route('hotspot.index') }}"><i class="bi bi-person-vcard"></i> User Hotspot</a></li>
-            <li><a class="nav-link {{ request()->routeIs('vouchers.*') ? 'active' : '' }}" href="{{ route('vouchers.index') }}"><i class="bi bi-ticket-perforated"></i> Voucher</a></li>
-            <li><a class="nav-link {{ request()->routeIs('packages.*') ? 'active' : '' }}" href="{{ route('packages.index') }}"><i class="bi bi-box-seam"></i> Paket / Profil</a></li>
+            <li><a class="nav-link {{ $r->routeIs('students.*') ? 'active' : '' }}" href="{{ route('students.index') }}"><i class="bi bi-mortarboard"></i> Data Siswa</a></li>
+            <li><a class="nav-link {{ $r->routeIs('teachers.*') ? 'active' : '' }}" href="{{ route('teachers.index') }}"><i class="bi bi-person-badge"></i> Data Guru &amp; Tendik</a></li>
+            <li><a class="nav-link {{ $r->routeIs('hotspot.index') ? 'active' : '' }}" href="{{ route('hotspot.index') }}"><i class="bi bi-person-vcard"></i> User Hotspot</a></li>
+            <li><a class="nav-link {{ $r->routeIs('vouchers.*') ? 'active' : '' }}" href="{{ route('vouchers.index') }}"><i class="bi bi-ticket-perforated"></i> Voucher</a></li>
+            <li><a class="nav-link {{ $r->routeIs('packages.*') ? 'active' : '' }}" href="{{ route('packages.index') }}"><i class="bi bi-box-seam"></i> Paket / Profil</a></li>
 
             <div class="nav-heading">Laporan</div>
-            <li><a class="nav-link {{ request()->routeIs('reports.index') ? 'active' : '' }}" href="{{ route('reports.index') }}"><i class="bi bi-bar-chart"></i> Laporan</a></li>
-            <li><a class="nav-link {{ request()->routeIs('reports.logs') ? 'active' : '' }}" href="{{ route('reports.logs') }}"> Log Aktivitas</a></li>
+            <li><a class="nav-link {{ $r->routeIs('reports.index') ? 'active' : '' }}" href="{{ route('reports.index') }}"><i class="bi bi-bar-chart"></i> Laporan</a></li>
+            <li><a class="nav-link {{ $r->routeIs('reports.logs') ? 'active' : '' }}" href="{{ route('reports.logs') }}"> Log Aktivitas</a></li>
 
             @if($u && $u->isSuperadmin())
             <div class="nav-heading">Sistem</div>
-            <li><a class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" href="{{ route('settings.mikrotik.edit') }}"><i class="bi bi-router"></i> Pengaturan Router</a></li>
-            <li><a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}"><i class="bi bi-shield-lock"></i> Kelola Admin</a></li>
+            <li><a class="nav-link {{ $r->routeIs('settings.*') ? 'active' : '' }}" href="{{ route('settings.mikrotik.edit') }}"><i class="bi bi-router"></i> Pengaturan Router</a></li>
+            <li><a class="nav-link {{ $r->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}"><i class="bi bi-shield-lock"></i> Kelola Admin</a></li>
             @endif
         </ul>
     </nav>
 
     <div class="scrim" id="scrim" onclick="toggleNav(false)"></div>
 
+    {{-- ========== MAIN CONTENT ========== --}}
     <div id="content">
         <header class="topbar">
             <button class="burger d-lg-none" onclick="toggleNav()"><i class="bi bi-list"></i></button>
@@ -262,14 +403,155 @@
         </main>
     </div>
 
+    {{-- ========== BOTTOM NAVIGATION (mobile only) ========== --}}
+    <nav id="bottomNav">
+        <div class="bnav-inner">
+            <a href="{{ route('dashboard') }}" class="bnav-item {{ $r->routeIs('dashboard') ? 'active' : '' }}">
+                <i class="bi bi-grid-1x2{{ $r->routeIs('dashboard') ? '-fill' : '' }}"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ route('hotspot.monitor') }}" class="bnav-item {{ $r->routeIs('hotspot.monitor') ? 'active' : '' }}">
+                <i class="bi bi-broadcast{{ $r->routeIs('hotspot.monitor') ? '' : '' }}"></i>
+                <span>Monitor</span>
+            </a>
+            <a href="{{ route('bandwidth.index') }}" class="bnav-item {{ $r->routeIs('bandwidth.*') ? 'active' : '' }}">
+                <i class="bi bi-speedometer2"></i>
+                <span>Bandwidth</span>
+            </a>
+            <a href="{{ route('vouchers.index') }}" class="bnav-item {{ $r->routeIs('vouchers.*') ? 'active' : '' }}">
+                <i class="bi bi-ticket-perforated{{ $r->routeIs('vouchers.*') ? '-fill' : '' }}"></i>
+                <span>Voucher</span>
+            </a>
+            <a href="javascript:void(0)" class="bnav-item" id="moreBtn" onclick="toggleMore()">
+                <i class="bi bi-grid-3x3-gap-fill"></i>
+                <span>Lainnya</span>
+            </a>
+        </div>
+    </nav>
+
+    {{-- ========== "MORE" BOTTOM SHEET ========== --}}
+    <div class="sheet-scrim" id="sheetScrim" onclick="toggleMore(false)"></div>
+    <div id="moreSheet">
+        <div class="sheet-handle"></div>
+
+        <div class="sheet-section">Manajemen</div>
+        <div class="sheet-grid">
+            <a href="{{ route('students.index') }}" class="sheet-item {{ $r->routeIs('students.*') ? 'active' : '' }}">
+                <i class="bi bi-mortarboard-fill"></i>Data Siswa
+            </a>
+            <a href="{{ route('teachers.index') }}" class="sheet-item {{ $r->routeIs('teachers.*') ? 'active' : '' }}">
+                <i class="bi bi-person-badge-fill"></i>Data Guru
+            </a>
+            <a href="{{ route('hotspot.index') }}" class="sheet-item {{ $r->routeIs('hotspot.index') ? 'active' : '' }}">
+                <i class="bi bi-person-vcard-fill"></i>User Hotspot
+            </a>
+            <a href="{{ route('packages.index') }}" class="sheet-item {{ $r->routeIs('packages.*') ? 'active' : '' }}">
+                <i class="bi bi-box-seam-fill"></i>Paket
+            </a>
+        </div>
+
+        <div class="sheet-section">Laporan & Sistem</div>
+        <div class="sheet-grid">
+            <a href="{{ route('reports.index') }}" class="sheet-item {{ $r->routeIs('reports.index') ? 'active' : '' }}">
+                <i class="bi bi-bar-chart-fill"></i>Laporan
+            </a>
+            <a href="{{ route('reports.logs') }}" class="sheet-item {{ $r->routeIs('reports.logs') ? 'active' : '' }}">
+                <i class="bi bi-clock-history"></i>Log Aktivitas
+            </a>
+            @if($u && $u->isSuperadmin())
+            <a href="{{ route('settings.mikrotik.edit') }}" class="sheet-item {{ $r->routeIs('settings.*') ? 'active' : '' }}">
+                <i class="bi bi-router-fill"></i>Router
+            </a>
+            <a href="{{ route('users.index') }}" class="sheet-item {{ $r->routeIs('users.*') ? 'active' : '' }}">
+                <i class="bi bi-shield-lock-fill"></i>Admin
+            </a>
+            @endif
+            <a href="{{ route('profile.edit') }}" class="sheet-item {{ $r->routeIs('profile.*') ? 'active' : '' }}">
+                <i class="bi bi-person-gear"></i>Profil
+            </a>
+            <a href="javascript:void(0)" class="sheet-item" onclick="event.preventDefault();document.getElementById('logoutForm').submit();">
+                <i class="bi bi-box-arrow-right" style="color:var(--danger)"></i><span style="color:var(--danger)">Keluar</span>
+            </a>
+        </div>
+        <form id="logoutForm" method="POST" action="{{ route('logout') }}" class="d-none">@csrf</form>
+    </div>
+
+    {{-- ========== PULL-TO-REFRESH indicator ========== --}}
+    <div id="pullIndicator"><div class="spinner-border" role="status"></div></div>
+
     @stack('modals')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function toggleNav(force){
-            const sb=document.getElementById('sidebar'), sc=document.getElementById('scrim');
-            const show = force===undefined ? !sb.classList.contains('show') : force;
-            sb.classList.toggle('show', show); sc.classList.toggle('show', show);
-        }
+    /* Desktop sidebar toggle */
+    function toggleNav(force){
+        const sb=document.getElementById('sidebar'), sc=document.getElementById('scrim');
+        const show = force===undefined ? !sb.classList.contains('show') : force;
+        sb.classList.toggle('show', show); sc.classList.toggle('show', show);
+    }
+
+    /* Bottom sheet "More" */
+    function toggleMore(force){
+        const sh=document.getElementById('moreSheet'), sc=document.getElementById('sheetScrim');
+        const open = force===undefined ? !sh.classList.contains('open') : force;
+        sh.classList.toggle('open', open);
+        sc.classList.toggle('open', open);
+        /* prevent body scroll when sheet open */
+        document.body.style.overflow = open ? 'hidden' : '';
+    }
+
+    /* Swipe down to close sheet */
+    (function(){
+        const sh=document.getElementById('moreSheet');
+        let startY=0, currentY=0, dragging=false;
+        sh.addEventListener('touchstart', e => {
+            if(sh.scrollTop > 5) return;
+            startY = e.touches[0].clientY; dragging = true;
+        }, {passive:true});
+        sh.addEventListener('touchmove', e => {
+            if(!dragging) return;
+            currentY = e.touches[0].clientY;
+            const dy = currentY - startY;
+            if(dy > 0) sh.style.transform = `translateY(${dy}px)`;
+        }, {passive:true});
+        sh.addEventListener('touchend', () => {
+            if(!dragging) return; dragging = false;
+            const dy = currentY - startY;
+            sh.style.transform = '';
+            if(dy > 80) toggleMore(false);
+            currentY = 0;
+        });
+    })();
+
+    /* Pull-to-refresh (mobile) */
+    (function(){
+        const ind = document.getElementById('pullIndicator');
+        let startY=0, pulling=false;
+        document.addEventListener('touchstart', e => {
+            if(window.scrollY === 0 && window.innerWidth < 992){
+                startY = e.touches[0].clientY; pulling = true;
+            }
+        }, {passive:true});
+        document.addEventListener('touchmove', e => {
+            if(!pulling) return;
+            const dy = e.touches[0].clientY - startY;
+            if(dy > 40) ind.classList.add('pulling');
+            else ind.classList.remove('pulling');
+        }, {passive:true});
+        document.addEventListener('touchend', () => {
+            if(!pulling) return; pulling = false;
+            if(ind.classList.contains('pulling')){
+                location.reload();
+            }
+            ind.classList.remove('pulling');
+        });
+    })();
+
+    /* Haptic feedback on bnav tap (if supported) */
+    document.querySelectorAll('.bnav-item').forEach(el => {
+        el.addEventListener('click', () => {
+            if(navigator.vibrate) navigator.vibrate(8);
+        });
+    });
     </script>
     @stack('scripts')
 </body>
