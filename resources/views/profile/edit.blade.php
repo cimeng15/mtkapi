@@ -59,40 +59,6 @@
             </div>
         </div>
 
-        {{-- Hapus Akun --}}
-        <div class="card border-danger">
-            <div class="card-header text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Hapus Akun</div>
-            <div class="card-body">
-                <p class="text-muted small mb-3">Setelah akun dihapus, semua data akan hilang permanen.</p>
-                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal"><i class="bi bi-trash me-1"></i>Hapus Akun</button>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-{{-- Modal Hapus Akun --}}
-<div class="modal fade" id="deleteAccountModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form method="POST" action="{{ route('profile.destroy') }}" class="modal-content">
-            @csrf @method('delete')
-            <div class="modal-header border-danger">
-                <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Hapus Akun</h5>
-                <button class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Yakin ingin menghapus akun? Semua data akan hilang permanen.</p>
-                <div class="mb-0">
-                    <label for="delete_password" class="form-label">Masukkan password untuk konfirmasi</label>
-                    <input type="password" id="delete_password" name="password" class="form-control @error('password', 'userDeletion') is-invalid @enderror" placeholder="Password" required>
-                    @error('password', 'userDeletion')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button class="btn btn-danger"><i class="bi bi-trash me-1"></i>Hapus Permanen</button>
-            </div>
-        </form>
     </div>
 </div>
 @endsection
