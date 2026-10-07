@@ -563,14 +563,43 @@
             if(navigator.vibrate) navigator.vibrate(8);
         });
     });
-    /* Live search: debounce 400ms, AJAX — hanya replace data tabel, tanpa full reload */
+    /* AJAX table loader — dipakai untuk search, sort, dan pagination tanpa full reload */
     (function(){
         var timer, lastVal='', abortCtrl;
+
+        /* Core: fetch URL, replace #ajax-table content */
+        function ajaxLoad(url, pushState){
+            if(abortCtrl) abortCtrl.abort();
+            abortCtrl = new AbortController();
+            if(pushState !== false) history.replaceState(null, '', url);
+
+            fetch(url, {
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                signal: abortCtrl.signal
+            })
+            .then(function(r){ return r.text(); })
+            .then(function(html){
+                var target = document.getElementById('ajax-table');
+                if(target){
+                    target.innerHTML = html;
+                    var sa = document.getElementById('selectAll');
+                    if(sa) sa.checked = false;
+                }
+                hideSpinner();
+            })
+            .catch(function(e){
+                if(e.name !== 'AbortError') hideSpinner();
+            });
+        }
+
+        function hideSpinner(){
+            document.querySelectorAll('.live-search-spinner').forEach(function(s){ s.classList.add('d-none'); });
+        }
+
+        /* Live search with debounce */
         document.querySelectorAll('.live-search').forEach(function(input){
             var form = input.closest('form');
-            var spinner = form.querySelector('.live-search-spinner');
 
-            /* Prevent normal form submit — use AJAX instead */
             form.addEventListener('submit', function(e){
                 e.preventDefault();
                 doSearch(input.value.trim());
@@ -578,6 +607,7 @@
 
             input.addEventListener('input', function(){
                 var val = this.value.trim();
+                var spinner = form.querySelector('.live-search-spinner');
                 clearTimeout(timer);
                 if(val === lastVal){ if(spinner) spinner.classList.add('d-none'); return; }
                 if(val.length >= 2 || val.length === 0){
@@ -594,38 +624,30 @@
 
             function doSearch(val){
                 lastVal = val;
-                if(abortCtrl) abortCtrl.abort();
-                abortCtrl = new AbortController();
-
                 var url = new URL(window.location);
                 if(val) url.searchParams.set('q', val);
                 else url.searchParams.delete('q');
                 url.searchParams.delete('page');
-
-                /* Update URL bar without reload */
-                history.replaceState(null, '', url);
-
-                fetch(url, {
-                    headers: {'X-Requested-With': 'XMLHttpRequest'},
-                    signal: abortCtrl.signal
-                })
-                .then(function(r){ return r.text(); })
-                .then(function(html){
-                    var target = document.getElementById('ajax-table');
-                    if(target){
-                        target.innerHTML = html;
-                        /* Re-bind selectAll checkbox */
-                        var sa = document.getElementById('selectAll');
-                        if(sa) sa.checked = false;
-                    }
-                    if(spinner) spinner.classList.add('d-none');
-                })
-                .catch(function(e){
-                    if(e.name !== 'AbortError'){
-                        if(spinner) spinner.classList.add('d-none');
-                    }
-                });
+                ajaxLoad(url);
             }
+        });
+
+        /* Intercept clicks inside #ajax-table: sort links, pagination links */
+        document.addEventListener('click', function(e){
+            var target = document.getElementById('ajax-table');
+            if(!target) return;
+
+            /* Find closest <a> inside #ajax-table */
+            var link = e.target.closest('#ajax-table a[href]');
+            if(!link) return;
+            var href = link.getAttribute('href');
+            if(!href || href === '#' || href.startsWith('javascript:')) return;
+
+            /* Only intercept GET navigation links (sort headers, pagination) */
+            if(link.closest('form')) return; /* skip links inside forms */
+
+            e.preventDefault();
+            ajaxLoad(href);
         });
     })();
     </script>
