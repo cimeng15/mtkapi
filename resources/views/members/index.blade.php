@@ -25,7 +25,8 @@
     <form class="d-flex gap-2" method="GET">
         <div class="input-group input-group-sm" style="min-width:240px">
             <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
-            <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Cari nama / ID / {{ strtolower($scope['detail']) }}...">
+            <input type="text" name="q" value="{{ request('q') }}" class="form-control live-search" placeholder="Cari nama / ID / {{ strtolower($scope['detail']) }}..." autocomplete="off">
+            <span class="input-group-text bg-transparent live-search-spinner d-none"><span class="spinner-border spinner-border-sm" style="width:14px;height:14px;border-width:2px;color:var(--brand)"></span></span>
         </div>
         @if($scope['scope'] === 'guru')
         <select name="type" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">

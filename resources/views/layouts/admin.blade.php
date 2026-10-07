@@ -563,6 +563,37 @@
             if(navigator.vibrate) navigator.vibrate(8);
         });
     });
+    /* Live search: debounce 300ms, min 2 chars or empty to reset */
+    (function(){
+        var timer, lastVal='';
+        document.querySelectorAll('.live-search').forEach(function(input){
+            input.addEventListener('input', function(){
+                var val = this.value.trim();
+                var form = this.closest('form');
+                var spinner = form.querySelector('.live-search-spinner');
+                clearTimeout(timer);
+                if(val === lastVal) return;
+                /* Show spinner */
+                if(spinner) spinner.classList.remove('d-none');
+                timer = setTimeout(function(){
+                    lastVal = val;
+                    /* Only submit if ≥2 chars or cleared (to reset) */
+                    if(val.length >= 2 || val.length === 0){
+                        form.submit();
+                    } else {
+                        if(spinner) spinner.classList.add('d-none');
+                    }
+                }, 400);
+            });
+            /* Clear: jika user hapus semua teks, reset hasil */
+            input.addEventListener('search', function(){
+                if(this.value === '' && lastVal !== ''){
+                    lastVal = '';
+                    this.closest('form').submit();
+                }
+            });
+        });
+    })();
     </script>
     @stack('scripts')
 </body>

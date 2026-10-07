@@ -21,7 +21,8 @@
     <form class="d-flex gap-2" method="GET">
         <div class="input-group input-group-sm" style="min-width:240px">
             <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
-            <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Cari username...">
+            <input type="text" name="q" value="{{ request('q') }}" class="form-control live-search" placeholder="Cari username..." autocomplete="off">
+            <span class="input-group-text bg-transparent live-search-spinner d-none"><span class="spinner-border spinner-border-sm" style="width:14px;height:14px;border-width:2px;color:var(--brand)"></span></span>
         </div>
         @if(request('per_page'))<input type="hidden" name="per_page" value="{{ request('per_page') }}">@endif
         @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
