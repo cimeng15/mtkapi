@@ -44,9 +44,16 @@ class MemberController extends Controller
             $query->where('type', $type);
         }
 
-        $members = $query->orderBy('name')->paginate(20)->withQueryString();
+        $perPage = in_array((int) $request->get('per_page'), [10, 20, 50, 100]) ? (int) $request->get('per_page') : 20;
 
-        return view('members.index', compact('members', 'scope'));
+        // Sorting
+        $sortable = ['member_id', 'name', 'type', 'class', 'department', 'created_at'];
+        $sort = in_array($request->get('sort'), $sortable) ? $request->get('sort') : 'name';
+        $dir = in_array($request->get('dir'), ['asc', 'desc']) ? $request->get('dir') : 'asc';
+
+        $members = $query->orderBy($sort, $dir)->paginate($perPage)->withQueryString();
+
+        return view('members.index', compact('members', 'scope', 'perPage', 'sort', 'dir'));
     }
 
     public function create(Request $request)

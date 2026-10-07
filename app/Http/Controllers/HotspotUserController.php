@@ -16,14 +16,21 @@ class HotspotUserController extends Controller
     {
         $query = HotspotUser::with(['member', 'package']);
         if ($search = $request->get('q')) {
-            $query->where('username', 'like', "%$search%")
+            $query->where(function ($w) use ($search) {
+                $w->where('username', 'like', "%$search%")
                   ->orWhere('comment', 'like', "%$search%");
+            });
         }
         $perPage = in_array((int) $request->get('per_page'), [10, 20, 50, 100]) ? (int) $request->get('per_page') : 20;
-        $users = $query->latest()->paginate($perPage)->withQueryString();
+
+        // Sorting
+        $sortable = ['username', 'password', 'profile', 'status', 'created_at'];
+        $sort = in_array($request->get('sort'), $sortable) ? $request->get('sort') : 'created_at';
+        $dir = $request->get('dir') === 'asc' ? 'asc' : 'desc';
+        $users = $query->orderBy($sort, $dir)->paginate($perPage)->withQueryString();
         $packages = Package::where('is_active', true)->orderBy('name')->get();
 
-        return view('hotspot.index', compact('users', 'packages', 'perPage'));
+        return view('hotspot.index', compact('users', 'packages', 'perPage', 'sort', 'dir'));
     }
 
     /**
